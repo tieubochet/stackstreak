@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StacksStreak - Daily Onchain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      // Polyfills for Stacks libraries (Buffer and global are required)
+      window.global = window;
+      window.process = { env: { NODE_ENV: 'production' } };
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0f172a; /* Slate 900 */
+        color: #f8fafc;
+      }
+      /* Custom scrollbar for cyberpunk feel */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1e293b; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #f97316; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #ea580c; 
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@stacks/connect": "https://esm.sh/@stacks/connect@7.7.0",
+    "@stacks/auth": "https://esm.sh/@stacks/auth@6.0.0",
+    "@stacks/network": "https://esm.sh/@stacks/network@6.0.0",
+    "@stacks/common": "https://esm.sh/@stacks/common@6.0.0",
+    "@stacks/transactions": "https://esm.sh/@stacks/transactions@6.0.0",
+    "@stacks/encryption": "https://esm.sh/@stacks/encryption@6.0.0",
+    "@stacks/profile": "https://esm.sh/@stacks/profile@6.0.0",
+    "next/": "https://esm.sh/next@^16.1.4/",
+    "next": "https://esm.sh/next@^16.1.4",
+    "tailwindcss-animate": "https://esm.sh/tailwindcss-animate@^1.0.7",
+    "tailwindcss": "https://esm.sh/tailwindcss@^4.1.18"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
