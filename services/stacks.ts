@@ -1,6 +1,12 @@
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
 import { StacksMainnet  } from '@stacks/network';
-import { fetchCallReadOnlyFunction, standardPrincipalCV, trueCV, falseCV, ClarityType } from '@stacks/transactions';
+import {
+  callReadOnlyFunction,
+  standardPrincipalCV,
+  trueCV,
+  falseCV,
+  ClarityType
+} from '@stacks/transactions';
 import { UserData } from '../types';
 
 // Configuration for Stacks
@@ -51,7 +57,7 @@ const cvToNumber = (cv: any): number => {
  */
 export const fetchUserStreak = async (address: string): Promise<Partial<UserData> | null> => {
   try {
-    const result = await fetchCallReadOnlyFunction({
+    const result = await callReadOnlyFunction({
       network: STACKS_CONFIG.network,
       contractAddress: STACKS_CONFIG.contractAddress,
       contractName: STACKS_CONFIG.contractName,
