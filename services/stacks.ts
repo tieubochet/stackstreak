@@ -1,6 +1,6 @@
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
-import { StacksMainnet } from '@stacks/network';
-import { callReadOnlyFunction, standardPrincipalCV, trueCV, falseCV, ClarityType } from '@stacks/transactions';
+import { STACKS_MAINNET } from '@stacks/network';
+import { fetchCallReadOnlyFunction, standardPrincipalCV, trueCV, falseCV, ClarityType } from '@stacks/transactions';
 import { UserData } from '../types';
 
 // Configuration for Stacks
@@ -11,11 +11,10 @@ export const userSession = new UserSession({ appConfig });
 
 // Switch to Mainnet for production
 export const STACKS_CONFIG = {
-  // The transaction ID provided: 0xa2efa65b180ea742b6a00ca2bec62305724a6e25e9b5c2d15372edcd9720e3dd
-  // Sender/Deployer: SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS
+  // Sender/Deployer: SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
   contractName: 'streak-reg', 
-  network: new StacksMainnet(),
+  network: STACKS_MAINNET,
 };
 
 // Helper to get local storage data mixed with real wallet address
@@ -52,7 +51,7 @@ const cvToNumber = (cv: any): number => {
  */
 export const fetchUserStreak = async (address: string): Promise<Partial<UserData> | null> => {
   try {
-    const result = await callReadOnlyFunction({
+    const result = await fetchCallReadOnlyFunction({
       network: STACKS_CONFIG.network,
       contractAddress: STACKS_CONFIG.contractAddress,
       contractName: STACKS_CONFIG.contractName,
