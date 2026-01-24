@@ -9,6 +9,8 @@ import {
 } from '@stacks/transactions';
 import { UserData } from '../types';
 
+const network = new StacksMainnet();
+
 // Configuration for Stacks
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 
@@ -20,7 +22,7 @@ export const STACKS_CONFIG = {
   // Sender/Deployer: SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
   contractName: 'streak-reg', 
-  network: StacksMainnet ,
+  network: new StacksMainnet() ,
 };
 
 // Helper to get local storage data mixed with real wallet address
