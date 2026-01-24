@@ -13,8 +13,8 @@ export const userSession = new UserSession({ appConfig });
 export const STACKS_CONFIG = {
   // The transaction ID provided: 0xa2efa65b180ea742b6a00ca2bec62305724a6e25e9b5c2d15372edcd9720e3dd
   // Sender/Deployer: SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS
-  contractAddress: 'SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS', 
-  contractName: 'stacks-streak-v1', 
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
+  contractName: 'streak-reg', 
   network: new StacksMainnet(),
 };
 
