@@ -1,0 +1,2 @@
+# stackstreak
+A daily on-chain engagement dApp on Stacks. Check in daily, keep your streak alive, and earn rewards.
