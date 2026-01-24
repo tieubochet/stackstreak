@@ -1,5 +1,5 @@
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
-import { STACKS_MAINNET } from '@stacks/network';
+import { StacksMainnet  } from '@stacks/network';
 import { fetchCallReadOnlyFunction, standardPrincipalCV, trueCV, falseCV, ClarityType } from '@stacks/transactions';
 import { UserData } from '../types';
 
@@ -14,7 +14,7 @@ export const STACKS_CONFIG = {
   // Sender/Deployer: SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
   contractName: 'streak-reg', 
-  network: STACKS_MAINNET,
+  network: StacksMainnet ,
 };
 
 // Helper to get local storage data mixed with real wallet address
