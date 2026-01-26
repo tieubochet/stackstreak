@@ -192,8 +192,8 @@ const App: React.FC = () => {
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
-
-                          <div className="mb-6">
+sfs
+                          <div className="mb-6">dsfsafa
                             <NextCheckInCountdown
                               lastCheckInDay={user.lastCheckInDay}
                             />
