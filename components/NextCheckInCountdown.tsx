@@ -3,27 +3,25 @@ import { useEffect, useState } from 'react';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type Props = {
-  lastCheckInAt?: number;
+  lastCheckInAt: number | undefined;
 };
 
 export default function NextCheckInCountdown({ lastCheckInAt }: Props) {
-  const [remaining, setRemaining] = useState<number>(0);
+  const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
-    if (!lastCheckInAt) {
-      setRemaining(0);
-      return;
-    }
-
-    const update = () => {
-      const nextTime = lastCheckInAt + DAY_MS;
+    const tick = () => {
+      if (!lastCheckInAt) {
+        setRemaining(0);
+        return;
+      }
+      const next = lastCheckInAt + DAY_MS;
       const now = Date.now();
-      setRemaining(nextTime - now);
+      setRemaining(next - now);
     };
 
-    update();
-    const id = setInterval(update, 1000);
-
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [lastCheckInAt]);
 
