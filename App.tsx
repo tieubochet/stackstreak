@@ -192,7 +192,7 @@ const App: React.FC = () => {
                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
                            <NextCheckInCountdown
-                              lastCheckInDay={user.lastCheckInAt}
+                              lastCheckInAt={user.lastCheckInAt}
                             />
                            <button 
                              onClick={handleCheckIn}
