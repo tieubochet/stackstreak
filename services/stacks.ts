@@ -53,21 +53,37 @@ const getStoredUserData = (address: string): UserData => {
       currentStreak: 0,
       bestStreak: 0,
       lastCheckInDay: 0,
+      lastCheckInAt: 0,   // ✅ ADD
       points: 0,
-      streakDays: [],
+      streakDays: [],     // ✅ ADD
     };
   }
 
-  const raw = localStorage.getItem(`stacks_streak_${address}`);
-  if (raw) return JSON.parse(raw);
+  const key = `stacks_streak_${address}`;
+  const stored = localStorage.getItem(key);
+
+  if (stored) {
+    const parsed = JSON.parse(stored) as Partial<UserData>;
+
+    return {
+      address,
+      currentStreak: parsed.currentStreak ?? 0,
+      bestStreak: parsed.bestStreak ?? 0,
+      lastCheckInDay: parsed.lastCheckInDay ?? 0,
+      lastCheckInAt: parsed.lastCheckInAt ?? 0, // ✅ ENSURE
+      points: parsed.points ?? 0,
+      streakDays: parsed.streakDays ?? [],       // ✅ ENSURE
+    };
+  }
 
   return {
     address,
     currentStreak: 0,
     bestStreak: 0,
     lastCheckInDay: 0,
+    lastCheckInAt: 0,   // ✅ ADD
     points: 0,
-    streakDays: [],
+    streakDays: [],     // ✅ ADD
   };
 };
 
