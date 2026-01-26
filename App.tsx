@@ -192,9 +192,12 @@ const App: React.FC = () => {
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
-                           <NextCheckInCountdown
-  lastCheckInDay={user.lastCheckInDay}
-/>
+
+                          <div className="mb-6">
+                            <NextCheckInCountdown
+                              lastCheckInDay={user.lastCheckInDay}
+                            />
+                          </div>
                            <button 
                              onClick={handleCheckIn}
                              disabled={loading}
@@ -300,12 +303,14 @@ const App: React.FC = () => {
 
             {/* Stats Grid */}
             <StreakCard user={user} />
-             {user && (
-  <StreakHeatmap
-    streakDays={user.streakDays}
-    days={30}
-  />
-)}
+             {user && user.streakDays.length > 0 && (
+              <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
+                <StreakHeatmap
+                  streakDays={user.streakDays}
+                  days={30}
+                />
+              </div>
+            )}
 
           </div>
 

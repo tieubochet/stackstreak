@@ -36,7 +36,7 @@ const StreakHeatmap: React.FC<Props> = ({
   return (
     <div className="mt-6">
       <h4 className="text-sm font-semibold text-slate-300 mb-2">
-        Streak history
+        Streak history (last 30 days)
       </h4>
 
       <div className="grid grid-cols-10 gap-1">
