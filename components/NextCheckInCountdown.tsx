@@ -3,46 +3,36 @@ import { useEffect, useState } from 'react';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type Props = {
-  lastCheckInAt: number | undefined;
+  lastCheckInDay: number;
 };
 
-export default function NextCheckInCountdown({ lastCheckInAt }: Props) {
-  const [remaining, setRemaining] = useState(0);
+const NextCheckInCountdown: React.FC<Props> = ({ lastCheckInDay }) => {
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const tick = () => {
-      if (!lastCheckInAt) {
-        setRemaining(0);
-        return;
-      }
-      const next = lastCheckInAt + DAY_MS;
-      const now = Date.now();
-      setRemaining(next - now);
-    };
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [lastCheckInAt]);
+  const nextCheckInAt = (lastCheckInDay + 1) * DAY_MS;
+  const diff = nextCheckInAt - now;
 
-  if (!lastCheckInAt || remaining <= 0) {
+  // ✅ ĐÃ TỚI GIỜ CHECK-IN
+  if (diff <= 0) {
     return (
-      <div className="text-center rounded-lg px-3 py-2 text-sm font-semibold bg-green-900 text-green-400">
-        ✅ Ready to check-in
+      <div className="mb-4 text-sm font-semibold text-green-400">
+        ✅ You can check in now
       </div>
     );
   }
 
-  const totalSeconds = Math.floor(remaining / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-
-  const pad = (n: number) => n.toString().padStart(2, '0');
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
 
   return (
-    <div className="text-center rounded-lg px-3 py-2 text-sm font-semibold bg-zinc-800 text-orange-400">
-      ⏰ Next check-in in {pad(h)}:{pad(m)}:{pad(s)}
-    </div>
-  );
-}
+    <div className="mb-4 text-sm text-slate-400">
+      ⏰ Next check-in in{' '}
+      <span className="font-mono text-orange-400">
+        {h}h {m}m {s}s
+      </span>

@@ -302,7 +302,9 @@ const App: React.FC = () => {
 
             {/* Stats Grid */}
             <StreakCard user={user} />
-
+             {user && (
+  <StreakHeatmap days={user.streakDays} />
+)}     
           </div>
 
           {/* Right Column: Leaderboard */}
