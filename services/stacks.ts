@@ -54,6 +54,7 @@ const getStoredUserData = (address: string): UserData => {
       bestStreak: 0,
       lastCheckInDay: 0,
       points: 0,
+      lastCheckInAt: 0,
     };
   }
 
@@ -66,6 +67,7 @@ const getStoredUserData = (address: string): UserData => {
     bestStreak: 0,
     lastCheckInDay: 0,
     points: 0,
+    lastCheckInAt: 0,
   };
 };
 
