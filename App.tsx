@@ -289,8 +289,7 @@ const App: React.FC = () => {
                            >
                              Back to Dashboard
                            </button>
-                           {user && (
-                            <StreakHeatmap streakDays={user.streakDays || []} days={30} />
+                           
                           )}
                          </div>
                        )}
@@ -303,8 +302,10 @@ const App: React.FC = () => {
             {/* Stats Grid */}
             <StreakCard user={user} />
              {user && (
-  <StreakHeatmap days={user.streakDays} />
-)}     
+                            <StreakHeatmap
+  streakDays={user.streakDays}
+  days={30}
+/>  
           </div>
 
           {/* Right Column: Leaderboard */}
