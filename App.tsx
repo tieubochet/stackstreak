@@ -132,9 +132,7 @@ const App: React.FC = () => {
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium text-white">{formatAddress(user.address)}</p>
                     <p className="text-xs text-orange-400">{user.points} PTS</p>
-                    <NextCheckInCountdown
-                      lastCheckInDay={user.lastCheckInDay}
-                    />
+                    
                   </div>
                   <button 
                     onClick={handleDisconnect}
@@ -193,7 +191,9 @@ const App: React.FC = () => {
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
-                           
+                           <NextCheckInCountdown
+                              lastCheckInDay={user.lastCheckInAt}
+                            />
                            <button 
                              onClick={handleCheckIn}
                              disabled={loading}

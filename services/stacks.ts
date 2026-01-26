@@ -13,6 +13,7 @@ import {
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
+const now = Date.now();
 
 
 /* =========================
@@ -190,7 +191,8 @@ export const submitCheckInTransaction = (
           ...current,
           currentStreak: newStreak,
           bestStreak: Math.max(current.bestStreak, newStreak),
-          lastCheckInDay: Math.floor(Date.now() / DAY_MS),
+          lastCheckInDay: current.lastCheckInDay + 1,
+          lastCheckInAt: now,
           points: current.points + reward,
         };
 
