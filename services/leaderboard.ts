@@ -6,6 +6,7 @@ export type LeaderboardEntry = {
 };
 
 const KEY = 'stacks_streak_leaderboard';
+export const LEADERBOARD_UPDATED_EVENT = 'leaderboard-updated';
 
 export const saveToLeaderboard = (user: UserData) => {
   if (typeof window === 'undefined') return;
@@ -30,6 +31,9 @@ export const saveToLeaderboard = (user: UserData) => {
   }
 
   localStorage.setItem(KEY, JSON.stringify(list));
+
+  // 🔄 Notify UI
+  window.dispatchEvent(new Event(LEADERBOARD_UPDATED_EVENT));
 };
 
 export const getLeaderboard = (): LeaderboardEntry[] => {
