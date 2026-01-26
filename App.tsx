@@ -13,6 +13,8 @@ import { UserData, AppState } from './types';
 import Spinner from './components/Spinner';
 import StreakCard from './components/StreakCard';
 import Leaderboard from './components/Leaderboard';
+import NextCheckInCountdown from './components/NextCheckInCountdown';
+
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -130,6 +132,9 @@ const App: React.FC = () => {
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium text-white">{formatAddress(user.address)}</p>
                     <p className="text-xs text-orange-400">{user.points} PTS</p>
+                    <NextCheckInCountdown
+                      lastCheckInDay={user.lastCheckInDay}
+                    />
                   </div>
                   <button 
                     onClick={handleDisconnect}
