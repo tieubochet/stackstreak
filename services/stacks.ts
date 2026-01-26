@@ -169,62 +169,57 @@ export const logout = () => {
 ========================= */
 
 export const submitCheckInTransaction = (
-  const todayDayIndex = Math.floor(Date.now() / (24 * 60 * 60 * 1000));
   current: UserData
 ): Promise<{ newData: UserData; reward: number }> => {
   return new Promise((resolve, reject) => {
     openContractCall({
-      network,
+      network: STACKS_CONFIG.network,
       contractAddress: STACKS_CONFIG.contractAddress,
       contractName: STACKS_CONFIG.contractName,
-      functionName: 'check-in', // 🔥 KHỚP CONTRACT
+      functionName: 'check-in',
       functionArgs: [],
       appDetails: {
         name: 'StacksStreak',
         icon:
           typeof window !== 'undefined'
-            ? `${window.location.origin}/favicon.ico`
-            : '',
+            ? window.location.origin + '/favicon.ico'
+            : '/favicon.ico',
       },
       onFinish: () => {
+        const now = Date.now();
+        const todayDayIndex = Math.floor(
+          now / (24 * 60 * 60 * 1000)
+        );
+
         const newStreak = current.currentStreak + 1;
         const reward = 10 + newStreak * 2;
 
         const newData: UserData = {
-          ...currentData,
-          currentStreak: newStreak,
-          bestStreak: Math.max(currentData.bestStreak, newStreak),
-          lastCheckInDay: todayDayIndex,
-          lastCheckInAt: Date.now(),
-          points: currentData.points + reward,
-          streakDays: Array.from(
-            new Set([...(currentData.streakDays || []), todayDayIndex])
-          ),
-        };
-
-        const updated: UserData = {
           ...current,
           currentStreak: newStreak,
           bestStreak: Math.max(current.bestStreak, newStreak),
-          lastCheckInDay: current.lastCheckInDay + 1,
+          lastCheckInDay: todayDayIndex,
           lastCheckInAt: now,
           points: current.points + reward,
+          streakDays: Array.from(
+            new Set([...(current.streakDays || []), todayDayIndex])
+          ),
         };
 
         if (typeof window !== 'undefined') {
           localStorage.setItem(
             `stacks_streak_${current.address}`,
-            JSON.stringify(updated)
+            JSON.stringify(newData)
           );
         }
 
-        resolve({ newData: updated, reward });
-        saveToLeaderboard(updated);
+        resolve({ newData, reward });
       },
-      onCancel: () => reject('Cancelled'),
+      onCancel: () => reject('Transaction cancelled'),
     });
   });
 };
+
 
 export const submitVoteTransaction = (
   vote: boolean
