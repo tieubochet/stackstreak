@@ -4,109 +4,234 @@ import {
   showConnect,
   openContractCall,
 } from '@stacks/connect';
-
 import { StacksMainnet } from '@stacks/network';
-
 import {
   callReadOnlyFunction,
   standardPrincipalCV,
-  trueCV,
-  falseCV,
+  uintCV,
   ClarityType,
-  PostConditionMode,
 } from '@stacks/transactions';
-
 import { UserData } from '../types';
 
-/* ------------------------------------------------------------------ */
-/* CONFIG */
-/* ------------------------------------------------------------------ */
+/* =========================
+   NETWORK & CONFIG
+========================= */
 
-export const appConfig = new AppConfig(['store_write']);
+export const network = new StacksMainnet();
+
+const appConfig = new AppConfig(['store_write', 'publish_data']);
+
 export const userSession = new UserSession({ appConfig });
 
 export const STACKS_CONFIG = {
-  network: new StacksMainnet(),
-
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', // ⚠️ thay bằng address deploy contract
-  contractName: 'streak-reg',  // ⚠️ đúng tên contract
-
-  appDetails: {
-    name: 'StackStreak',
-    icon: 'https://stackstreak.xyz/icon.png',
-  },
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'streak-reg',
+  network,
 };
 
-/* ------------------------------------------------------------------ */
-/* AUTH */
-/* ------------------------------------------------------------------ */
+/* =========================
+   HELPERS
+========================= */
 
-export const connectWallet = async () => {
-  return new Promise<void>((resolve) => {
+const DAY_MS = 86_400_000;
+
+const cvToNumber = (cv: any): number => {
+  if (!cv) return 0;
+  if (cv.type === ClarityType.UInt || cv.type === ClarityType.Int) {
+    return Number(cv.value);
+  }
+  return 0;
+};
+
+const getStoredUserData = (address: string): UserData => {
+  if (typeof window === 'undefined') {
+    return {
+      address,
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCheckInDay: 0,
+      points: 0,
+    };
+  }
+
+  const raw = localStorage.getItem(`stacks_streak_${address}`);
+  if (raw) return JSON.parse(raw);
+
+  return {
+    address,
+    currentStreak: 0,
+    bestStreak: 0,
+    lastCheckInDay: 0,
+    points: 0,
+  };
+};
+
+/* =========================
+   READ ONLY – ON CHAIN
+========================= */
+
+export const fetchUserStreak = async (
+  address: string
+): Promise<Partial<UserData> | null> => {
+  try {
+    const res = await callReadOnlyFunction({
+      network,
+      contractAddress: STACKS_CONFIG.contractAddress,
+      contractName: STACKS_CONFIG.contractName,
+      functionName: 'get-user',
+      functionArgs: [standardPrincipalCV(address)],
+      senderAddress: address, // 🔴 BẮT BUỘC – fix lỗi build
+    });
+
+    if (res.type !== ClarityType.Tuple) return null;
+
+    const data = res.data;
+
+    return {
+      currentStreak: cvToNumber(data['streak']),
+      bestStreak: cvToNumber(data['best-streak']),
+      lastCheckInDay: cvToNumber(data['last-day']),
+    };
+  } catch (err) {
+    console.warn('Read-only failed:', err);
+    return null;
+  }
+};
+
+/* =========================
+   USER DATA MERGE
+========================= */
+
+export const getRealUserData = async (): Promise<UserData | null> => {
+  if (!userSession.isUserSignedIn()) return null;
+
+  const profile = userSession.loadUserData().profile;
+  const address = profile.stxAddress.mainnet;
+
+  const local = getStoredUserData(address);
+  const chain = await fetchUserStreak(address);
+
+  const merged: UserData = {
+    ...local,
+    ...chain,
+    bestStreak: Math.max(
+      local.bestStreak,
+      chain?.bestStreak ?? 0
+    ),
+  };
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(
+      `stacks_streak_${address}`,
+      JSON.stringify(merged)
+    );
+  }
+
+  return merged;
+};
+
+/* =========================
+   AUTH (🔥 FIX EXPORT)
+========================= */
+
+export const authenticate = (): Promise<UserData> => {
+  return new Promise((resolve, reject) => {
     showConnect({
       userSession,
-      appDetails: STACKS_CONFIG.appDetails,
-      onFinish: () => resolve(),
-      onCancel: () => resolve(),
+      appDetails: {
+        name: 'StacksStreak',
+        icon:
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/favicon.ico`
+            : '',
+      },
+      onFinish: async () => {
+        const user = await getRealUserData();
+        if (user) resolve(user);
+        else reject('Failed to load user');
+      },
+      onCancel: () => reject('User cancelled'),
     });
   });
 };
 
-export const disconnectWallet = () => {
+export const logout = () => {
   userSession.signUserOut();
 };
 
-export const getUserData = (): UserData | null => {
-  if (!userSession.isUserSignedIn()) return null;
-  return userSession.loadUserData() as UserData;
-};
+/* =========================
+   TRANSACTIONS
+========================= */
 
-/* ------------------------------------------------------------------ */
-/* READ-ONLY: GET STREAK */
-/* ------------------------------------------------------------------ */
+export const submitCheckInTransaction = (
+  current: UserData
+): Promise<{ newData: UserData; reward: number }> => {
+  return new Promise((resolve, reject) => {
+    openContractCall({
+      network,
+      contractAddress: STACKS_CONFIG.contractAddress,
+      contractName: STACKS_CONFIG.contractName,
+      functionName: 'check-in', // 🔥 KHỚP CONTRACT
+      functionArgs: [],
+      appDetails: {
+        name: 'StacksStreak',
+        icon:
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/favicon.ico`
+            : '',
+      },
+      onFinish: () => {
+        const newStreak = current.currentStreak + 1;
+        const reward = 10 + newStreak * 2;
 
-export const getStreak = async (principal: string): Promise<number> => {
-  const result = await callReadOnlyFunction({
-    network: STACKS_CONFIG.network,
-    contractAddress: STACKS_CONFIG.contractAddress,
-    contractName: STACKS_CONFIG.contractName,
-    functionName: 'get-streak',
-    functionArgs: [standardPrincipalCV(principal)],
-    senderAddress: principal,
-  });
+        const updated: UserData = {
+          ...current,
+          currentStreak: newStreak,
+          bestStreak: Math.max(current.bestStreak, newStreak),
+          lastCheckInDay: Math.floor(Date.now() / DAY_MS),
+          points: current.points + reward,
+        };
 
-  if (result.type === ClarityType.UInt) {
-    return Number(result.value);
-  }
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(
+            `stacks_streak_${current.address}`,
+            JSON.stringify(updated)
+          );
+        }
 
-  return 0;
-};
-
-/* ------------------------------------------------------------------ */
-/* WRITE: CHECK-IN */
-/* ------------------------------------------------------------------ */
-
-export const checkIn = async () => {
-  if (!userSession.isUserSignedIn()) {
-    throw new Error('Wallet not connected');
-  }
-
-  const userData = userSession.loadUserData();
-  const sender = userData.profile.stxAddress.mainnet;
-
-  await openContractCall({
-    network: STACKS_CONFIG.network,
-    contractAddress: STACKS_CONFIG.contractAddress,
-    contractName: STACKS_CONFIG.contractName,
-    functionName: 'check-in',
-    functionArgs: [],
-    senderAddress: sender,
-    postConditionMode: PostConditionMode.Allow,
-    onFinish: (data) => {
-      console.log('TX SENT:', data.txId);
-    },
-    onCancel: () => {
-      console.log('TX CANCELLED');
-    },
+        resolve({ newData: updated, reward });
+      },
+      onCancel: () => reject('Cancelled'),
+    });
   });
 };
+
+export const submitVoteTransaction = (
+  vote: boolean
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    openContractCall({
+      network,
+      contractAddress: STACKS_CONFIG.contractAddress,
+      contractName: STACKS_CONFIG.contractName,
+      functionName: 'vote',
+      functionArgs: [uintCV(vote ? 1 : 0)], // 🔥 CONTRACT NHẬN uint
+      appDetails: {
+        name: 'StacksStreak',
+        icon:
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/favicon.ico`
+            : '',
+      },
+      onFinish: (data) => resolve(data.txId),
+      onCancel: () => reject('Cancelled'),
+    });
+  });
+};
+
+/* =========================
+   UI HELPERS
+========================= */
+
+export const formatAddress = (addr: string) =>
+  addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
