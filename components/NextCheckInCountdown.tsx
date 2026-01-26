@@ -17,7 +17,6 @@ const NextCheckInCountdown: React.FC<Props> = ({ lastCheckInDay }) => {
   const nextCheckInAt = (lastCheckInDay + 1) * DAY_MS;
   const diff = nextCheckInAt - now;
 
-  // ✅ ĐÃ TỚI GIỜ CHECK-IN
   if (diff <= 0) {
     return (
       <div className="mb-4 text-sm font-semibold text-green-400">
@@ -36,3 +35,8 @@ const NextCheckInCountdown: React.FC<Props> = ({ lastCheckInDay }) => {
       <span className="font-mono text-orange-400">
         {h}h {m}m {s}s
       </span>
+    </div>
+  );
+};
+
+export default NextCheckInCountdown;
