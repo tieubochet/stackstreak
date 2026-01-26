@@ -14,6 +14,7 @@ import Spinner from './components/Spinner';
 import StreakCard from './components/StreakCard';
 import Leaderboard from './components/Leaderboard';
 import NextCheckInCountdown from './components/NextCheckInCountdown';
+import StreakHeatmap from './components/StreakHeatmap';
 
 
 const App: React.FC = () => {
@@ -288,6 +289,9 @@ const App: React.FC = () => {
                            >
                              Back to Dashboard
                            </button>
+                           {user && (
+                            <StreakHeatmap streakDays={user.streakDays || []} days={30} />
+                          )}
                          </div>
                        )}
                     </>

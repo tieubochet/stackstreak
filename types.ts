@@ -5,6 +5,7 @@ export interface UserData {
   lastCheckInDay: number;
   points: number;
   lastCheckInAt: number;
+  streakDays: number[];
 }
 
 export interface LeaderboardEntry {
