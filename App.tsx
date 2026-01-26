@@ -190,7 +190,7 @@ const App: React.FC = () => {
                     <>
                        {appState === AppState.IDLE && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
-                           <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
+                           <h2 className="text-3xl font-bold mb-2">Ready for today?fdgdfgdf</h2>
                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
 sfs
                           <div className="mb-6">dsfsafa
