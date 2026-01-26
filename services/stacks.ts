@@ -54,7 +54,7 @@ const getStoredUserData = (address: string): UserData => {
       bestStreak: 0,
       lastCheckInDay: 0,
       points: 0,
-      lastCheckInAt: 0,
+      streakDays: [],
     };
   }
 
@@ -67,7 +67,7 @@ const getStoredUserData = (address: string): UserData => {
     bestStreak: 0,
     lastCheckInDay: 0,
     points: 0,
-    lastCheckInAt: 0,
+    streakDays: [],
   };
 };
 
@@ -169,6 +169,7 @@ export const logout = () => {
 ========================= */
 
 export const submitCheckInTransaction = (
+  const todayDayIndex = Math.floor(Date.now() / (24 * 60 * 60 * 1000));
   current: UserData
 ): Promise<{ newData: UserData; reward: number }> => {
   return new Promise((resolve, reject) => {
@@ -188,6 +189,18 @@ export const submitCheckInTransaction = (
       onFinish: () => {
         const newStreak = current.currentStreak + 1;
         const reward = 10 + newStreak * 2;
+
+        const newData: UserData = {
+          ...currentData,
+          currentStreak: newStreak,
+          bestStreak: Math.max(currentData.bestStreak, newStreak),
+          lastCheckInDay: todayDayIndex,
+          lastCheckInAt: Date.now(),
+          points: currentData.points + reward,
+          streakDays: Array.from(
+            new Set([...(currentData.streakDays || []), todayDayIndex])
+          ),
+        };
 
         const updated: UserData = {
           ...current,
