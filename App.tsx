@@ -290,7 +290,6 @@ const App: React.FC = () => {
                              Back to Dashboard
                            </button>
                            
-                          )}
                          </div>
                        )}
                     </>
@@ -305,7 +304,8 @@ const App: React.FC = () => {
                             <StreakHeatmap
   streakDays={user.streakDays}
   days={30}
-/>  
+/>
+                          )}
           </div>
 
           {/* Right Column: Leaderboard */}
