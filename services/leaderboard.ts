@@ -11,7 +11,9 @@ export const saveToLeaderboard = (user: UserData) => {
   if (typeof window === 'undefined') return;
 
   const raw = localStorage.getItem(KEY);
-  const list: LeaderboardEntry[] = raw ? JSON.parse(raw) : [];
+  const list: LeaderboardEntry[] = raw
+    ? (JSON.parse(raw) as LeaderboardEntry[])
+    : [];
 
   const idx = list.findIndex(u => u.address === user.address);
 
@@ -36,7 +38,12 @@ export const getLeaderboard = (): LeaderboardEntry[] => {
   const raw = localStorage.getItem(KEY);
   if (!raw) return [];
 
-  return JSON.parse(raw)
-    .sort((a, b) => b.bestStreak - a.bestStreak)
+  const parsed = JSON.parse(raw) as LeaderboardEntry[];
+
+  return parsed
+    .sort(
+      (a: LeaderboardEntry, b: LeaderboardEntry) =>
+        b.bestStreak - a.bestStreak
+    )
     .slice(0, 20);
 };
