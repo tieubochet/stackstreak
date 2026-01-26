@@ -1,5 +1,6 @@
 type Props = {
-  days: number[];
+  streakDays: number[];
+  days?: number;
 };
 
 const StreakHeatmap: React.FC<Props> = ({ days }) => {
