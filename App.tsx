@@ -301,11 +301,12 @@ const App: React.FC = () => {
             {/* Stats Grid */}
             <StreakCard user={user} />
              {user && (
-                            <StreakHeatmap
-  streakDays={user.streakDays}
-  days={30}
-/>
-                          )}
+  <StreakHeatmap
+    streakDays={user.streakDays}
+    days={30}
+  />
+)}
+
           </div>
 
           {/* Right Column: Leaderboard */}
