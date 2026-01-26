@@ -12,6 +12,8 @@ import {
   ClarityType,
 } from '@stacks/transactions';
 import { UserData } from '../types';
+import { saveToLeaderboard } from './leaderboard';
+
 
 /* =========================
    NETWORK & CONFIG
@@ -200,6 +202,7 @@ export const submitCheckInTransaction = (
         }
 
         resolve({ newData: updated, reward });
+        saveToLeaderboard(updated);
       },
       onCancel: () => reject('Cancelled'),
     });
