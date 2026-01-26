@@ -2,13 +2,38 @@ import { Trophy } from 'lucide-react';
 import { getLeaderboard } from '../services/leaderboard';
 import { formatAddress } from '../services/stacks';
 
+const rankStyle = (index: number) => {
+  switch (index) {
+    case 0:
+      return {
+        icon: '🥇',
+        className: 'text-yellow-400 font-bold',
+      };
+    case 1:
+      return {
+        icon: '🥈',
+        className: 'text-gray-300 font-semibold',
+      };
+    case 2:
+      return {
+        icon: '🥉',
+        className: 'text-amber-600 font-semibold',
+      };
+    default:
+      return {
+        icon: `#${index + 1}`,
+        className: 'text-gray-400',
+      };
+  }
+};
+
 export default function Leaderboard() {
   const leaderboard = getLeaderboard();
 
   if (leaderboard.length === 0) {
     return (
       <div className="text-sm text-gray-400 text-center">
-        No data yet
+        No leaderboard data yet
       </div>
     );
   }
@@ -20,19 +45,27 @@ export default function Leaderboard() {
         Leaderboard
       </div>
 
-      {leaderboard.map((u, i) => (
-        <div
-          key={u.address}
-          className="flex justify-between text-sm"
-        >
-          <span>
-            #{i + 1} {formatAddress(u.address)}
-          </span>
-          <span className="font-bold">
-            🔥 {u.bestStreak}
-          </span>
-        </div>
-      ))}
+      {leaderboard.map((u, i) => {
+        const rank = rankStyle(i);
+
+        return (
+          <div
+            key={u.address}
+            className={`flex justify-between items-center text-sm rounded-lg px-2 py-1 ${
+              i < 3 ? 'bg-zinc-800' : ''
+            }`}
+          >
+            <div className={`flex items-center gap-2 ${rank.className}`}>
+              <span>{rank.icon}</span>
+              <span>{formatAddress(u.address)}</span>
+            </div>
+
+            <div className="font-bold text-orange-400">
+              🔥 {u.bestStreak}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
