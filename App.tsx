@@ -8,14 +8,13 @@ import {
   formatAddress, 
   getRealUserData, 
   userSession 
-} from './services/stacks';
-import { UserData, AppState } from './types';
-import Spinner from './components/Spinner';
-import StreakCard from './components/StreakCard';
-import Leaderboard from './components/Leaderboard';
-import NextCheckInCountdown from './components/NextCheckInCountdown';
-import StreakHeatmap from './components/StreakHeatmap';
-import { loadLocalStreak, saveLocalStreak } from './services/localStreak';
+} from './services/stacks'; //
+import { UserData, AppState } from './types'; //
+import Spinner from './components/Spinner'; //
+import StreakCard from './components/StreakCard'; //
+import Leaderboard from './components/Leaderboard'; //
+import NextCheckInCountdown from './components/NextCheckInCountdown'; //
+import StreakHeatmap from './components/StreakHeatmap'; //
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -24,9 +23,10 @@ const App: React.FC = () => {
   const [reward, setReward] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [votingStatus, setVotingStatus] = useState<'idle' | 'voting' | 'voted'>('idle');
+  const [mounted, setMounted] = useState(false);
 
-  // Initialize checks for existing session
   useEffect(() => {
+    setMounted(true);
     const initSession = async () => {
       if (userSession.isSignInPending()) {
         await userSession.handlePendingSignIn();
@@ -35,12 +35,7 @@ const App: React.FC = () => {
       
       if (userSession.isUserSignedIn()) {
         const userData = await getRealUserData();
-        const local = loadLocalStreak(userData.address);
-        setUser({
-          ...userData,
-          lastCheckInAt: local?.lastCheckInAt,
-          streakDays: local?.streakDays || [],
-        });
+        setUser(userData);
       }
     };
     initSession();
@@ -79,7 +74,6 @@ const App: React.FC = () => {
       setUser(newData);
       setReward(newReward);
       
-      // Transition to Spinner
       setLoading(false);
       setAppState(AppState.SPINNING);
     } catch (e: any) {
@@ -97,7 +91,6 @@ const App: React.FC = () => {
       setVotingStatus('voted');
     } catch (e: any) {
       console.error("Vote failed", e);
-      // We don't block the flow if vote fails, just reset status
       setVotingStatus('idle');
     }
   };
@@ -107,6 +100,8 @@ const App: React.FC = () => {
       setAppState(AppState.VOTING);
     }, 2000);
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white selection:bg-orange-500 selection:text-white">
@@ -138,7 +133,6 @@ const App: React.FC = () => {
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium text-white">{formatAddress(user.address)}</p>
                     <p className="text-xs text-orange-400">{user.points} PTS</p>
-                    
                   </div>
                   <button 
                     onClick={handleDisconnect}
@@ -194,18 +188,18 @@ const App: React.FC = () => {
                   ) : (
                     <>
                        {appState === AppState.IDLE && (
-                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
-                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2> 
-                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
+                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
+                           <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
+                           <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
+                           
+                           <div className="mb-6">
+                            <NextCheckInCountdown
+                              lastCheckInDay={user.lastCheckInDay}
+                            />
+                           </div>
 
-                            <div className="mb-6">
-                              <NextCheckInCountdown
-                                lastCheckInDay={user.lastCheckInDay}
-                              />
-                            </div>
-
-                            <button 
-                            onClick={handleCheckIn}
+                           <button 
+                             onClick={handleCheckIn}
                              disabled={loading}
                              className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
                            >
@@ -298,7 +292,6 @@ const App: React.FC = () => {
                            >
                              Back to Dashboard
                            </button>
-                           
                          </div>
                        )}
                     </>
@@ -307,11 +300,14 @@ const App: React.FC = () => {
                </div>
             </div>
 
-
+            {/* Stats Grid */}
             <StreakCard user={user} />
+             
+            {/* Heatmap Area - Chỉ render khi có dữ liệu */}
             {user && (user.streakDays.length > 0 || user.currentStreak > 0) && (
               <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
                 <StreakHeatmap
+                  // Tự động generate mảng ngày nếu streakDays rỗng
                   streakDays={user.streakDays.length > 0 ? user.streakDays : Array.from({length: user.currentStreak}, (_, i) => Math.floor(Date.now()/86400000) - i)}
                   days={30}
                 />
