@@ -34,8 +34,7 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
    ```bash
    git clone https://github.com/tieubochet/stacks-streak.git
    cd stacks-streak
-
-```
+   ```
 
 2. **Install dependencies:**
 ```bash
