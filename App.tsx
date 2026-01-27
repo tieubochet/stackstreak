@@ -8,13 +8,13 @@ import {
   formatAddress, 
   getRealUserData, 
   userSession 
-} from './services/stacks'; //
-import { UserData, AppState } from './types'; //
-import Spinner from './components/Spinner'; //
-import StreakCard from './components/StreakCard'; //
-import Leaderboard from './components/Leaderboard'; //
-import NextCheckInCountdown from './components/NextCheckInCountdown'; //
-import StreakHeatmap from './components/StreakHeatmap'; //
+} from './services/stacks';
+import { UserData, AppState } from './types';
+import Spinner from './components/Spinner';
+import StreakCard from './components/StreakCard';
+import Leaderboard from './components/Leaderboard';
+import NextCheckInCountdown from './components/NextCheckInCountdown';
+import StreakHeatmap from './components/StreakHeatmap';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -190,36 +190,37 @@ const App: React.FC = () => {
                        {appState === AppState.IDLE && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
-                           <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
+                           <p className="text-slate-400 mb-6">Check in now to keep your {user.currentStreak}-day streak alive!</p>
                            
-                           <div className="mb-6">
-                            <NextCheckInCountdown
-                              lastCheckInDay={user.lastCheckInDay}
-                            />
+                           {/* --- COUNTDOWN HIỂN THỊ TẠI ĐÂY --- */}
+                           <NextCheckInCountdown lastCheckInDay={user.lastCheckInDay} />
+                           
+                           <div>
+                             <button 
+                               onClick={handleCheckIn}
+                               disabled={loading}
+                               className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
+                             >
+                               <span className="flex items-center space-x-2">
+                                 {loading ? (
+                                   <span>Waiting for Wallet...</span>
+                                 ) : (
+                                   <>
+                                     <CheckCircle2 className="w-6 h-6" />
+                                     <span>Check In Now</span>
+                                   </>
+                                 )}
+                               </span>
+                             </button>
                            </div>
 
-                           <button 
-                             onClick={handleCheckIn}
-                             disabled={loading}
-                             className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
-                           >
-                             <span className="flex items-center space-x-2">
-                               {loading ? (
-                                 <span>Waiting for Wallet...</span>
-                               ) : (
-                                 <>
-                                   <CheckCircle2 className="w-6 h-6" />
-                                   <span>Check In Now</span>
-                                 </>
-                               )}
-                             </span>
-                           </button>
-                           <p className="mt-4 text-xs text-slate-500 uppercase font-bold tracking-widest text-green-400/80">
+                           <p className="mt-6 text-xs text-slate-500 uppercase font-bold tracking-widest text-green-400/80">
                              ● Network: Stacks Mainnet
                            </p>
                          </div>
                        )}
 
+                       {/* ... (Các trạng thái CHECKING_IN, SPINNING, VOTING giữ nguyên) ... */}
                        {appState === AppState.CHECKING_IN && (
                          <div className="text-center">
                            <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
@@ -303,11 +304,10 @@ const App: React.FC = () => {
             {/* Stats Grid */}
             <StreakCard user={user} />
              
-            {/* Heatmap Area - Chỉ render khi có dữ liệu */}
+            {/* --- HEATMAP AREA --- Đã thêm kiểm tra để đảm bảo render */}
             {user && (user.streakDays.length > 0 || user.currentStreak > 0) && (
-              <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
+              <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
                 <StreakHeatmap
-                  // Tự động generate mảng ngày nếu streakDays rỗng
                   streakDays={user.streakDays.length > 0 ? user.streakDays : Array.from({length: user.currentStreak}, (_, i) => Math.floor(Date.now()/86400000) - i)}
                   days={30}
                 />

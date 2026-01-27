@@ -143,17 +143,16 @@ export const getRealUserData = async (): Promise<UserData | null> => {
   };
 
 
+
   if (merged.currentStreak > 0 && merged.streakDays.length === 0) {
     const today = Math.floor(Date.now() / 86400000);
     merged.streakDays = Array.from({ length: merged.currentStreak }, (_, i) => today - i);
   }
 
-
   if (typeof window !== 'undefined') {
-    localStorage.setItem(
-      `stacks_streak_${address}`,
-      JSON.stringify(merged)
-    );
+    localStorage.setItem(`stacks_streak_${address}`, JSON.stringify(merged));
+    
+    saveToLeaderboard(merged); 
   }
 
   return merged;
