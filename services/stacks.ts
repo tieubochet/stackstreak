@@ -50,12 +50,12 @@ const getStoredUserData = (address: string): UserData => {
   if (typeof window === 'undefined') {
     return {
       address,
-      currentStreak: 0,
-      bestStreak: 0,
-      lastCheckInDay: 0,
-      lastCheckInAt: 0,   // ✅ ADD
-      points: 0,
-      streakDays: [],     // ✅ ADD
+    currentStreak: 0,
+    bestStreak: 0,
+    lastCheckInDay: 0,
+    points: 0,
+    lastCheckInAt: 0, 
+    streakDays: [],
     };
   }
 
@@ -101,7 +101,7 @@ export const fetchUserStreak = async (
       contractName: STACKS_CONFIG.contractName,
       functionName: 'get-user',
       functionArgs: [standardPrincipalCV(address)],
-      senderAddress: address, // 🔴 BẮT BUỘC – fix lỗi build
+      senderAddress: address, 
     });
 
     if (res.type !== ClarityType.Tuple) return null;
@@ -132,6 +132,7 @@ export const getRealUserData = async (): Promise<UserData | null> => {
   const local = getStoredUserData(address);
   const chain = await fetchUserStreak(address);
 
+  // Merge dữ liệu
   const merged: UserData = {
     ...local,
     ...chain,
@@ -140,6 +141,13 @@ export const getRealUserData = async (): Promise<UserData | null> => {
       chain?.bestStreak ?? 0
     ),
   };
+
+
+  if (merged.currentStreak > 0 && merged.streakDays.length === 0) {
+    const today = Math.floor(Date.now() / 86400000);
+    merged.streakDays = Array.from({ length: merged.currentStreak }, (_, i) => today - i);
+  }
+
 
   if (typeof window !== 'undefined') {
     localStorage.setItem(
