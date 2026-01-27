@@ -31,10 +31,10 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 ## Getting Started
 
 1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/tieubochet/stacks-streak.git
-   cd stacks-streak
-   ```
+```bash
+git clone https://github.com/tieubochet/stacks-streak.git
+cd stacks-streak
+```
 
 2. **Install dependencies:**
 ```bash
@@ -48,6 +48,8 @@ yarn install
 3. **Asset Setup:**
 Ensure you have the NFT image placed at:
 `public/assets/dolphin.jpg`
+
+
 4. **Run the development server:**
 ```bash
 npm run dev
