@@ -1,6 +1,3 @@
-Đây là toàn bộ nội dung file `README.md` dưới dạng code block để bạn copy:
-
-```markdown
 # StacksStreak
 
 A daily on-chain engagement dApp built on the Stacks blockchain. Users can check in daily, maintain streaks, earn points, vote on community proposals, and mint exclusive daily NFTs.
@@ -35,7 +32,7 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/tieubochet/stacks-streak.git](https://github.com/tieubochet/stacks-streak.git)
+   git clone https://github.com/tieubochet/stacks-streak.git
    cd stacks-streak
 
 ```
@@ -99,7 +96,3 @@ This project is ready to be deployed on **Vercel**:
 ## License
 
 MIT
-
-```
-
-```
