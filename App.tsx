@@ -15,7 +15,7 @@ import StreakCard from './components/StreakCard';
 import Leaderboard from './components/Leaderboard';
 import NextCheckInCountdown from './components/NextCheckInCountdown';
 import StreakHeatmap from './components/StreakHeatmap';
-
+import { loadLocalStreak, saveLocalStreak } from './services/localStreak';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -35,7 +35,12 @@ const App: React.FC = () => {
       
       if (userSession.isUserSignedIn()) {
         const userData = await getRealUserData();
-        setUser(userData);
+        const local = loadLocalStreak(userData.address);
+        setUser({
+          ...userData,
+          lastCheckInAt: local?.lastCheckInAt,
+          streakDays: local?.streakDays || [],
+        });
       }
     };
     initSession();
@@ -189,17 +194,18 @@ const App: React.FC = () => {
                   ) : (
                     <>
                        {appState === AppState.IDLE && (
-                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
-                           <h2 className="text-3xl font-bold mb-2">Ready for today?fdgdfgdf</h2>
-                           <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
-sfs
-                          <div className="mb-6">dsfsafa
-                            <NextCheckInCountdown
-                              lastCheckInDay={user.lastCheckInDay}
-                            />
-                          </div>
-                           <button 
-                             onClick={handleCheckIn}
+                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
+                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2> 
+                            <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
+
+                            <div className="mb-6">
+                              <NextCheckInCountdown
+                                lastCheckInDay={user.lastCheckInDay}
+                              />
+                            </div>
+
+                            <button 
+                            onClick={handleCheckIn}
                              disabled={loading}
                              className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
                            >
@@ -301,12 +307,12 @@ sfs
                </div>
             </div>
 
-            {/* Stats Grid */}
+
             <StreakCard user={user} />
-             {user && user.streakDays.length > 0 && (
+            {user && (user.streakDays.length > 0 || user.currentStreak > 0) && (
               <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
                 <StreakHeatmap
-                  streakDays={user.streakDays}
+                  streakDays={user.streakDays.length > 0 ? user.streakDays : Array.from({length: user.currentStreak}, (_, i) => Math.floor(Date.now()/86400000) - i)}
                   days={30}
                 />
               </div>
