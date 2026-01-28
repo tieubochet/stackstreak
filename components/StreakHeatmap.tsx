@@ -17,17 +17,29 @@ const StreakHeatmap: React.FC<Props> = ({
   // ✅ đúng: Set từ array streakDays
   const streakSet = new Set<number>(streakDays);
 
+  // Hàm chuyển đổi index ngày thành dd/mm/yyyy
+  const formatDate = (dayIndex: number) => {
+    const date = new Date(dayIndex * 86400000); // 86400000 = 24 * 60 * 60 * 1000
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  };
+
   const cells = Array.from({ length: days }, (_, i) => {
     const day = today - (days - 1 - i);
     const active = streakSet.has(day);
+    const dateStr = formatDate(day); // Tạo chuỗi ngày tháng
 
     return (
       <div
         key={day}
-        title={`Day ${day}`}
+        title={dateStr} // ✨ Hiển thị ngày tháng khi hover
         className={`
-          w-4 h-4 rounded-sm
-          ${active ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)]' : 'bg-slate-700'}
+          w-4 h-4 rounded-sm cursor-help transition-all duration-200
+          ${active 
+            ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)] hover:bg-orange-400' 
+            : 'bg-slate-700 hover:bg-slate-600'}
         `}
       />
     );
