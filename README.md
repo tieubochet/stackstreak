@@ -1,15 +1,17 @@
 # StacksStreak
 
-A daily on-chain engagement dApp built on the Stacks blockchain. Users can check in daily, maintain streaks, earn points, vote on community proposals, and mint exclusive daily NFTs.
+A daily on-chain engagement dApp built on the Stacks blockchain. Users can check in daily, maintain streaks, earn points, vote on community proposals, stake STX, predict market trends, and mint exclusive daily NFTs.
 
 ## Features
 
 - **Wallet Connection**: Support for Leather (Hiro) and Xverse wallets via `@stacks/connect`.
 - **Daily Check-in**: Smart contract interaction to record daily activity and maintain streaks.
-- **Daily NFT Minting (NEW)**: Users who check in can mint a "Daily Dolphin" collectible (SIP-009 Standard).
-- **Gamification**: Streak tracking, heatmaps, daily rewards wheel, and points system.
+- **Daily NFT Minting**: Users who check in can mint a "Daily Dolphin" collectible (SIP-009 Standard).
+- **Stake to Support (NEW)**: Lock 0.1 STX to show commitment to the community.
+- **Prediction Market (NEW)**: Predict whether STX price will go UP or DOWN.
+- **Gamification**: Streak tracking, heatmaps, daily rewards wheel, leaderboard, and social sharing.
 - **Voting**: On-chain community voting mechanism.
-- **Responsive UI**: Built with Tailwind CSS for mobile and desktop, featuring a cyberpunk aesthetic.
+- **Responsive UI**: Built with Tailwind CSS for mobile and desktop, featuring a modern cyberpunk aesthetic.
 
 ## Tech Stack
 
@@ -21,10 +23,12 @@ A daily on-chain engagement dApp built on the Stacks blockchain. Users can check
 
 ## Smart Contracts (Mainnet)
 
-This dApp interacts with two main contracts:
+This dApp interacts with four main contracts:
 
 1. **Streak Registry** (`streak-reg`): Handles user profiles, check-ins, and streak logic.
 2. **NFT Collection** (`teeboo-nft`): Handles the minting of the Daily Dolphin NFTs.
+3. **Staking** (`simple-staking`): Handles the 0.1 STX locking mechanism.
+4. **Prediction Market** (`prediction-market`): Handles STX price prediction logic.
 
 Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 
@@ -34,6 +38,7 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 ```bash
 git clone https://github.com/tieubochet/stacks-streak.git
 cd stacks-streak
+
 ```
 
 2. **Install dependencies:**
@@ -48,8 +53,6 @@ yarn install
 3. **Asset Setup:**
 Ensure you have the NFT image placed at:
 `public/assets/dolphin.jpg`
-
-
 4. **Run the development server:**
 ```bash
 npm run dev
@@ -64,7 +67,7 @@ npm run dev
 The app is currently configured for **Stacks Mainnet**.
 You can change the contract settings in `services/stacks.ts`.
 
-**Check-in Contract:**
+**Contract Configurations:**
 
 ```typescript
 export const STACKS_CONFIG = {
@@ -73,14 +76,21 @@ export const STACKS_CONFIG = {
   network: new StacksMainnet(),
 };
 
-```
-
-**NFT Contract:**
-
-```typescript
 export const NFT_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'teeboo-nft', 
+  network: new StacksMainnet(),
+};
+
+export const STAKE_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'simple-staking', 
+  network: new StacksMainnet(),
+};
+
+export const PREDICTION_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'prediction-market', 
   network: new StacksMainnet(),
 };
 
