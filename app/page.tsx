@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock } from 'lucide-react'; // ✨ Thêm Clock
 import { 
   authenticate, 
   logout, 
@@ -29,6 +29,9 @@ export default function Home() {
   const [votingStatus, setVotingStatus] = useState<'idle' | 'voting' | 'voted'>('idle');
   const [mounted, setMounted] = useState(false);
 
+  // Dùng state để force re-render mỗi phút (để cập nhật trạng thái nút bấm nếu qua ngày mới)
+  const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
     setMounted(true);
     const initSession = async () => {
@@ -43,6 +46,10 @@ export default function Home() {
       }
     };
     initSession();
+
+    // Cập nhật thời gian mỗi phút
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleConnect = async () => {
@@ -119,11 +126,17 @@ export default function Home() {
 
   if (!mounted) return null;
 
-  // --- LOGIC PHẢI ĐẶT Ở ĐÂY (TRƯỚC 'return') ---
+  // --- LOGIC KIỂM TRA ĐIỀU KIỆN ---
+  
+  // 1. Kiểm tra xem đã Mint NFT chưa (dựa vào ngày check-in và ngày hiện tại)
   const isCheckedInToday = user && user.lastCheckInAt && 
-    new Date(user.lastCheckInAt).toDateString() === new Date().toDateString();
+    new Date(user.lastCheckInAt).toDateString() === new Date(now).toDateString();
 
-  // --- BẮT ĐẦU PHẦN GIAO DIỆN ---
+  // 2. Kiểm tra xem có được phép Check-in tiếp không?
+  // Nếu lastCheckInDay nhỏ hơn ngày hôm nay -> Được check-in
+  const currentDayIndex = Math.floor(now / 86400000);
+  const canCheckIn = user ? user.lastCheckInDay < currentDayIndex : false;
+
   return (
     <div className="min-h-screen bg-slate-900 text-white selection:bg-orange-500 selection:text-white">
       {/* Navigation */}
@@ -216,14 +229,20 @@ export default function Home() {
                            <NextCheckInCountdown lastCheckInDay={user.lastCheckInDay} />
                            
                            <div>
+                             {/* 👇 NÚT CHECK-IN ĐÃ ĐƯỢC CẬP NHẬT LOGIC 👇 */}
                              <button 
                                onClick={handleCheckIn}
-                               disabled={loading}
-                               className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
+                               disabled={loading || !canCheckIn} // Khóa nếu đang load HOẶC chưa tới giờ
+                               className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center disabled:hover:translate-y-0 disabled:hover:shadow-none"
                              >
                                <span className="flex items-center space-x-2">
                                  {loading ? (
                                    <span>Waiting for Wallet...</span>
+                                 ) : !canCheckIn ? (
+                                   <>
+                                      <Clock className="w-6 h-6" />
+                                      <span>Come back tomorrow</span>
+                                   </>
                                  ) : (
                                    <>
                                      <CheckCircle2 className="w-6 h-6" />
