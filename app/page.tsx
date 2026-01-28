@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock, Check, Coins } from 'lucide-react';
+import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock, Check, Coins, TrendingUp, Activity } from 'lucide-react'; // ✨ Thêm icons
 import { 
   authenticate, 
   logout, 
@@ -367,7 +367,6 @@ export default function Home() {
                       Mint your exclusive NFT. Only available if you have checked in today.
                     </p>
                     
-                    {/* Logic nút bấm MINT */}
                     {isCheckedInToday ? (
                       <button 
                         onClick={handleMint}
@@ -409,36 +408,59 @@ export default function Home() {
           </div>
 
           {/* Right Column: Leaderboard, Stake, Heatmap, Info */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-8">
              <Leaderboard />
 
-             
+            
              {user && (
-              <div className="mt-8 bg-slate-800/60 rounded-2xl p-6 border border-slate-700 shadow-xl relative overflow-hidden">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-                      <Coins className="w-8 h-8 text-yellow-400" />
+              <div className="group relative rounded-2xl p-[1px] bg-gradient-to-r from-yellow-500/50 to-orange-500/50 hover:from-yellow-400 hover:to-orange-400 transition-all duration-300 shadow-lg">
+                <div className="bg-slate-900 rounded-2xl p-5 h-full relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2.5 bg-yellow-500/10 rounded-xl border border-yellow-500/20 text-yellow-400 group-hover:text-yellow-300 transition-colors">
+                        <Coins className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white text-lg leading-tight">Stake to Support</h3>
+                        <p className="text-xs text-slate-400 font-medium mt-0.5">Commitment Level</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">Stake to Support</h3>
-                      <p className="text-sm text-slate-400 mt-1">Lock 0.1 STX to show your commitment to the streak community.</p>
-                    </div>
+                    
+                    <p className="text-sm text-slate-400 mb-5 leading-relaxed">
+                      Lock <span className="text-white font-bold">0.1 STX</span> to show your dedication to the streak community.
+                    </p>
+                    
+                    <button 
+                      onClick={handleStake}
+                      disabled={staking}
+                      className="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-slate-900 font-bold rounded-xl shadow-[0_4px_12px_rgba(234,179,8,0.2)] hover:shadow-[0_4px_20px_rgba(234,179,8,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
+                    >
+                      {staking ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="w-4 h-4" />
+                          <span>Stake 0.1 STX</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-                  <button 
-                    onClick={handleStake}
-                    disabled={staking}
-                    className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-xl shadow-lg shadow-yellow-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[140px] justify-center"
-                  >
-                    {staking ? <Loader2 className="w-5 h-5 animate-spin" /> : "Stake 0.1 STX"}
-                  </button>
                 </div>
               </div>
              )}
 
-             
+           
              {user && (user.streakDays.length > 0 || user.currentStreak > 0) && (
-              <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
+              <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-5 shadow-xl">
+                 <div className="flex items-center gap-2 mb-4">
+                    <Activity className="w-4 h-4 text-orange-400" />
+                    <h4 className="text-sm font-bold text-slate-200">Activity Map</h4>
+                 </div>
                 <StreakHeatmap
                   streakDays={user.streakDays.length > 0 ? user.streakDays : Array.from({length: user.currentStreak}, (_, i) => Math.floor(Date.now()/86400000) - i)}
                   days={30}
@@ -447,16 +469,16 @@ export default function Home() {
              )}
              
              {/* Info Card */}
-             <div className="mt-8 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+             <div className="bg-slate-800/30 rounded-xl p-5 border border-slate-700/30">
                <div className="flex items-start space-x-3">
-                 <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                 <AlertCircle className="w-5 h-5 text-blue-400/80 flex-shrink-0 mt-0.5" />
                  <div>
                    <h4 className="font-bold text-sm text-slate-300 mb-1">How it works</h4>
-                   <p className="text-xs text-slate-500 leading-relaxed">
+                   <p className="text-xs text-slate-500/80 leading-relaxed">
                      1. Check in once every 24 hours.<br/>
                      2. Missing a day resets your streak to 0.<br/>
-                     3. Higher streaks = better rewards multipliers.<br/>
-                     4. Top 10 users earn weekly STX prizes.
+                     3. Higher streaks = better rewards.<br/>
+                     4. Top 10 users earn weekly prizes.
                    </p>
                  </div>
                </div>
