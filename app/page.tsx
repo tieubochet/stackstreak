@@ -311,7 +311,7 @@ export default function Home() {
                          <span className="font-bold text-slate-300 group-hover:text-red-400">DOWN</span>
                        </button>
                      </div>
-                     <p className="text-[10px] text-center text-slate-500 mt-3">Cost: 0.5 STX to participate</p>
+                     <p className="text-[10px] text-center text-slate-500 mt-3">Cost: 0.1 STX to participate</p>
                    </>
                  )}
                </div>
