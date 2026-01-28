@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock } from 'lucide-react'; // ✨ Thêm Clock
+import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock, Check } from 'lucide-react'; // ✨ Thêm Check icon
 import { 
   authenticate, 
   logout, 
@@ -28,8 +28,6 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [votingStatus, setVotingStatus] = useState<'idle' | 'voting' | 'voted'>('idle');
   const [mounted, setMounted] = useState(false);
-
-  // Dùng state để force re-render mỗi phút (để cập nhật trạng thái nút bấm nếu qua ngày mới)
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -47,7 +45,6 @@ export default function Home() {
     };
     initSession();
 
-    // Cập nhật thời gian mỗi phút
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -116,7 +113,13 @@ export default function Home() {
     if (!user) return;
     setMinting(true);
     try {
-      await submitMintNftTransaction();
+      // Gọi hàm mint, nó sẽ tự update localStorage
+      await submitMintNftTransaction(user);
+      
+      // Reload lại data user từ local để cập nhật UI ngay lập tức
+      const updatedUser = await getRealUserData();
+      setUser(updatedUser);
+      
     } catch (e) {
       console.error(e);
     } finally {
@@ -128,14 +131,17 @@ export default function Home() {
 
   // --- LOGIC KIỂM TRA ĐIỀU KIỆN ---
   
-  // 1. Kiểm tra xem đã Mint NFT chưa (dựa vào ngày check-in và ngày hiện tại)
+  // 1. Kiểm tra Check-in
   const isCheckedInToday = user && user.lastCheckInAt && 
     new Date(user.lastCheckInAt).toDateString() === new Date(now).toDateString();
 
-  // 2. Kiểm tra xem có được phép Check-in tiếp không?
-  // Nếu lastCheckInDay nhỏ hơn ngày hôm nay -> Được check-in
   const currentDayIndex = Math.floor(now / 86400000);
   const canCheckIn = user ? user.lastCheckInDay < currentDayIndex : false;
+
+  // 2. Kiểm tra Mint (Đã mint hôm nay chưa?)
+  // canMint nếu: Đã check-in VÀ Chưa mint hôm nay
+  const hasMintedToday = user ? user.lastMintDay === currentDayIndex : false;
+  const canMint = isCheckedInToday && !hasMintedToday;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white selection:bg-orange-500 selection:text-white">
@@ -229,10 +235,9 @@ export default function Home() {
                            <NextCheckInCountdown lastCheckInDay={user.lastCheckInDay} />
                            
                            <div>
-                             {/* 👇 NÚT CHECK-IN ĐÃ ĐƯỢC CẬP NHẬT LOGIC 👇 */}
                              <button 
                                onClick={handleCheckIn}
-                               disabled={loading || !canCheckIn} // Khóa nếu đang load HOẶC chưa tới giờ
+                               disabled={loading || !canCheckIn}
                                className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center disabled:hover:translate-y-0 disabled:hover:shadow-none"
                              >
                                <span className="flex items-center space-x-2">
@@ -259,6 +264,7 @@ export default function Home() {
                          </div>
                        )}
 
+                       {/* (Các phần appState khác giữ nguyên...) */}
                        {appState === AppState.CHECKING_IN && (
                          <div className="text-center">
                            <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
@@ -360,16 +366,23 @@ export default function Home() {
                       Mint your exclusive NFT. Only available if you have checked in today.
                     </p>
                     
+                    {/* Logic nút bấm MINT */}
                     {isCheckedInToday ? (
                       <button 
                         onClick={handleMint}
-                        disabled={minting}
-                        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto md:mx-0"
+                        // Khóa nếu đang mint HOẶC đã mint rồi
+                        disabled={minting || hasMintedToday}
+                        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto md:mx-0 disabled:hover:shadow-none"
                       >
                         {minting ? (
                           <>
                             <Loader2 className="animate-spin w-5 h-5"/>
                             <span>Minting...</span>
+                          </>
+                        ) : hasMintedToday ? (
+                          <>
+                            <Check className="w-5 h-5"/>
+                            <span>Already Minted</span>
                           </>
                         ) : (
                           <>

@@ -4,9 +4,9 @@ export interface UserData {
   bestStreak: number;
   lastCheckInDay: number;
   points: number;
-
-  lastCheckInAt: number; 
+  lastCheckInAt: number;
   streakDays: number[];
+  lastMintDay: number; 
 }
 
 export interface LeaderboardEntry {
