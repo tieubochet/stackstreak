@@ -13,6 +13,7 @@ import {
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
+import { trueCV, falseCV } from '@stacks/transactions';
 
 export const network = new StacksMainnet();
 const appConfig = new AppConfig(['store_write', 'publish_data']);
@@ -34,6 +35,12 @@ export const NFT_CONFIG = {
 export const STAKE_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
   contractName: 'stake', 
+  network,
+};
+
+export const PREDICTION_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'prediction-market', 
   network,
 };
 
@@ -265,6 +272,28 @@ export const submitStakeTransaction = (): Promise<string> => {
       },
       onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Staking cancelled'),
+    });
+  });
+};
+
+export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    openContractCall({
+      network: PREDICTION_CONFIG.network,
+      contractAddress: PREDICTION_CONFIG.contractAddress,
+      contractName: PREDICTION_CONFIG.contractName,
+      functionName: 'predict',
+      functionArgs: [isUp ? trueCV() : falseCV()], 
+      appDetails: {
+        name: 'StacksStreak Prediction',
+        icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
+      },
+      onFinish: (data) => {
+        if (typeof window !== 'undefined') {
+        }
+        resolve(data.txId);
+      },
+      onCancel: () => reject('Prediction cancelled'),
     });
   });
 };
