@@ -7,25 +7,28 @@ import {
   logout, 
   submitCheckInTransaction, 
   submitVoteTransaction,
+  submitMintNftTransaction, // ✨ Đã import
   formatAddress, 
   getRealUserData, 
   userSession 
-} from '../services/stacks';
+} from '../services/stacks'; // 👈 Chú ý: import từ ../services
 import { UserData, AppState } from '../types';
 import Spinner from '../components/Spinner';
 import StreakCard from '../components/StreakCard';
 import Leaderboard from '../components/Leaderboard';
+import NextCheckInCountdown from '../components/NextCheckInCountdown';
+import StreakHeatmap from '../components/StreakHeatmap';
 
 export default function Home() {
   const [user, setUser] = useState<UserData | null>(null);
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [loading, setLoading] = useState(false);
+  const [minting, setMinting] = useState(false); // ✨ State cho nút Mint
   const [reward, setReward] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [votingStatus, setVotingStatus] = useState<'idle' | 'voting' | 'voted'>('idle');
   const [mounted, setMounted] = useState(false);
 
-  // Prevent hydration errors by ensuring component mounts before showing UI
   useEffect(() => {
     setMounted(true);
     const initSession = async () => {
@@ -75,7 +78,6 @@ export default function Home() {
       setUser(newData);
       setReward(newReward);
       
-      // Transition to Spinner
       setLoading(false);
       setAppState(AppState.SPINNING);
     } catch (e: any) {
@@ -93,7 +95,6 @@ export default function Home() {
       setVotingStatus('voted');
     } catch (e: any) {
       console.error("Vote failed", e);
-      // We don't block the flow if vote fails, just reset status
       setVotingStatus('idle');
     }
   };
@@ -104,8 +105,25 @@ export default function Home() {
     }, 2000);
   };
 
-  // Prevent flash of unstyled content or hydration mismatch
+  // ✨ Hàm xử lý Mint
+  const handleMint = async () => {
+    if (!user) return;
+    setMinting(true);
+    try {
+      await submitMintNftTransaction();
+      // Logic sau khi mint thành công (nếu cần)
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMinting(false);
+    }
+  };
+
   if (!mounted) return null;
+
+  // ✨ LOGIC KIỂM TRA: So sánh ngày check-in với ngày hiện tại (Local Time)
+  const isCheckedInToday = user && user.lastCheckInAt && 
+    new Date(user.lastCheckInAt).toDateString() === new Date().toDateString();
 
   return (
     <div className="min-h-screen bg-slate-900 text-white selection:bg-orange-500 selection:text-white">
@@ -194,25 +212,30 @@ export default function Home() {
                        {appState === AppState.IDLE && (
                          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-lg">
                            <h2 className="text-3xl font-bold mb-2">Ready for today?</h2>
-                           <p className="text-slate-400 mb-8">Check in now to keep your {user.currentStreak}-day streak alive!</p>
+                           <p className="text-slate-400 mb-6">Check in now to keep your {user.currentStreak}-day streak alive!</p>
                            
-                           <button 
-                             onClick={handleCheckIn}
-                             disabled={loading}
-                             className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
-                           >
-                             <span className="flex items-center space-x-2">
-                               {loading ? (
-                                 <span>Waiting for Wallet...</span>
-                               ) : (
-                                 <>
-                                   <CheckCircle2 className="w-6 h-6" />
-                                   <span>Check In Now</span>
-                                 </>
-                               )}
-                             </span>
-                           </button>
-                           <p className="mt-4 text-xs text-slate-500 uppercase font-bold tracking-widest text-green-400/80">
+                           <NextCheckInCountdown lastCheckInDay={user.lastCheckInDay} />
+                           
+                           <div>
+                             <button 
+                               onClick={handleCheckIn}
+                               disabled={loading}
+                               className="group relative w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white rounded-2xl font-bold text-xl transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto flex justify-center"
+                             >
+                               <span className="flex items-center space-x-2">
+                                 {loading ? (
+                                   <span>Waiting for Wallet...</span>
+                                 ) : (
+                                   <>
+                                     <CheckCircle2 className="w-6 h-6" />
+                                     <span>Check In Now</span>
+                                   </>
+                                 )}
+                               </span>
+                             </button>
+                           </div>
+
+                           <p className="mt-6 text-xs text-slate-500 uppercase font-bold tracking-widest text-green-400/80">
                              ● Network: Stacks Mainnet
                            </p>
                          </div>
@@ -300,31 +323,64 @@ export default function Home() {
 
             {/* Stats Grid */}
             <StreakCard user={user} />
-
-          </div>
-
-          {/* Right Column: Leaderboard */}
-          <div className="lg:col-span-1">
-             <Leaderboard />
              
-             {/* Info Card */}
-             <div className="mt-8 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-               <div className="flex items-start space-x-3">
-                 <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                 <div>
-                   <h4 className="font-bold text-sm text-slate-300 mb-1">How it works</h4>
-                   <p className="text-xs text-slate-500 leading-relaxed">
-                     1. Check in once every 24 hours.<br/>
-                     2. Missing a day resets your streak to 0.<br/>
-                     3. Higher streaks = better rewards multipliers.<br/>
-                     4. Top 10 users earn weekly STX prizes.
-                   </p>
-                 </div>
-               </div>
-             </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+            {/* ✨ NFT MINT SECTION (Đã thêm vào file page.tsx) ✨ */}
+            {user && (
+              <div className="mt-8 bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 rounded-3xl p-6 relative overflow-hidden shadow-xl">
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl"></div>
+                
+                <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                  {/* NFT Image */}
+                  <div className="relative group shrink-0">
+                    <div className="absolute inset-0 bg-cyan-400 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                    <img src="/assets/dolphin.jpg" alt="Dolphin NFT" className="w-40 h-40 rounded-2xl shadow-2xl relative border-2 border-cyan-500/50 object-cover transform group-hover:scale-105 transition-transform duration-300" />
+                    <div className="absolute top-2 right-2 bg-black/70 text-[10px] text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30 font-mono">SIP-009</div>
+                  </div>
+                  
+                  {/* Content & Logic Button */}
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-2xl font-bold text-white mb-2">Daily Dolphin Collectible</h3>
+                    <p className="text-slate-300 text-sm mb-6">
+                      Mint your exclusive NFT. Only available if you have checked in today.
+                    </p>
+                    
+                    {/* Logic nút bấm */}
+                    {isCheckedInToday ? (
+                      <button 
+                        onClick={handleMint}
+                        disabled={minting}
+                        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto md:mx-0"
+                      >
+                        {minting ? (
+                          <>
+                            <Loader2 className="animate-spin w-5 h-5"/>
+                            <span>Minting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🌊 Mint Free NFT</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="flex flex-col items-center md:items-start gap-2">
+                        <div className="px-5 py-3 bg-slate-800/80 border border-slate-700 text-slate-400 rounded-xl inline-flex items-center gap-2 cursor-not-allowed opacity-70">
+                          <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span>Locked: Check-in required</span>
+                        </div>
+                        <p className="text-xs text-slate-500 italic">
+                          *Check in above to unlock this reward
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Heatmap Area */}
+            {user && (user.streakDays.length > 0 || user.currentStreak > 0) && (
+              <div className="mt-8 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <StreakHeatmap
+                  streakDays={user.streakDays.length > 0 ? user.streakDays : Array.from({length: user.currentStreak}, (_, i) => Math.floor(Date.now()/86400000) - i)}
+                  days={30}
