@@ -8,8 +8,8 @@ import { StacksMainnet } from '@stacks/network';
 import {
   callReadOnlyFunction,
   standardPrincipalCV,
-  ClarityType,
   uintCV,
+  ClarityType,
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
@@ -34,7 +34,7 @@ export const STACKS_CONFIG = {
 // ✨ NEW: Cấu hình Contract NFT (teeboo-nft)
 export const NFT_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'teeboo-nft', // Đã cập nhật đúng tên bạn deploy
+  contractName: 'teeboo-nft', 
   network,
 };
 
@@ -70,7 +70,6 @@ const getStoredUserData = (address: string): UserData => {
 
   if (stored) {
     const parsed = JSON.parse(stored) as Partial<UserData>;
-
     return {
       address,
       currentStreak: parsed.currentStreak ?? 0,
@@ -141,10 +140,7 @@ export const getRealUserData = async (): Promise<UserData | null> => {
   const merged: UserData = {
     ...local,
     ...chain,
-    bestStreak: Math.max(
-      local.bestStreak,
-      chain?.bestStreak ?? 0
-    ),
+    bestStreak: Math.max(local.bestStreak, chain?.bestStreak ?? 0),
   };
 
   // Tự động điền streakDays để hiện Heatmap nếu cần
@@ -154,10 +150,7 @@ export const getRealUserData = async (): Promise<UserData | null> => {
   }
 
   if (typeof window !== 'undefined') {
-    localStorage.setItem(
-      `stacks_streak_${address}`,
-      JSON.stringify(merged)
-    );
+    localStorage.setItem(`stacks_streak_${address}`, JSON.stringify(merged));
     saveToLeaderboard(merged);
   }
 
@@ -174,10 +167,7 @@ export const authenticate = (): Promise<UserData> => {
       userSession,
       appDetails: {
         name: 'StacksStreak',
-        icon:
-          typeof window !== 'undefined'
-            ? `${window.location.origin}/favicon.ico`
-            : '',
+        icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
       onFinish: async () => {
         const user = await getRealUserData();
@@ -194,7 +184,7 @@ export const logout = () => {
 };
 
 /* =========================
-   TRANSACTIONS (CORE)
+   TRANSACTIONS
 ========================= */
 
 export const submitCheckInTransaction = (
@@ -209,10 +199,7 @@ export const submitCheckInTransaction = (
       functionArgs: [],
       appDetails: {
         name: 'StacksStreak',
-        icon:
-          typeof window !== 'undefined'
-            ? window.location.origin + '/favicon.ico'
-            : '/favicon.ico',
+        icon: typeof window !== 'undefined' ? window.location.origin + '/favicon.ico' : '/favicon.ico',
       },
       onFinish: () => {
         const now = Date.now();
@@ -228,16 +215,11 @@ export const submitCheckInTransaction = (
           lastCheckInDay: todayDayIndex,
           lastCheckInAt: now,
           points: current.points + reward,
-          streakDays: Array.from(
-            new Set([...(current.streakDays || []), todayDayIndex])
-          ),
+          streakDays: Array.from(new Set([...(current.streakDays || []), todayDayIndex])),
         };
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem(
-            `stacks_streak_${current.address}`,
-            JSON.stringify(newData)
-          );
+          localStorage.setItem(`stacks_streak_${current.address}`, JSON.stringify(newData));
         }
 
         resolve({ newData, reward });
@@ -246,7 +228,6 @@ export const submitCheckInTransaction = (
     });
   });
 };
-
 
 export const submitVoteTransaction = (
   vote: boolean
@@ -260,10 +241,7 @@ export const submitVoteTransaction = (
       functionArgs: [uintCV(vote ? 1 : 0)],
       appDetails: {
         name: 'StacksStreak',
-        icon:
-          typeof window !== 'undefined'
-            ? `${window.location.origin}/favicon.ico`
-            : '',
+        icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
       onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Cancelled'),
@@ -271,10 +249,7 @@ export const submitVoteTransaction = (
   });
 };
 
-/* =========================
-   ✨ NEW: NFT TRANSACTIONS
-========================= */
-
+// ✨ NEW: Hàm Mint NFT mà file cũ của bạn đang thiếu
 export const submitMintNftTransaction = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     openContractCall({
@@ -292,10 +267,6 @@ export const submitMintNftTransaction = (): Promise<string> => {
     });
   });
 };
-
-/* =========================
-   UI HELPERS
-========================= */
 
 export const formatAddress = (addr: string) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';

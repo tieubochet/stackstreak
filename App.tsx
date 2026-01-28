@@ -5,7 +5,7 @@ import {
   logout, 
   submitCheckInTransaction, 
   submitVoteTransaction,
-  submitMintNftTransaction, 
+  submitMintNftTransaction, // ✨ Import hàm mint
   formatAddress, 
   getRealUserData, 
   userSession 
@@ -21,7 +21,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [loading, setLoading] = useState(false);
-  const [minting, setMinting] = useState(false);
+  const [minting, setMinting] = useState(false); // ✨ State cho nút Mint
   const [reward, setReward] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [votingStatus, setVotingStatus] = useState<'idle' | 'voting' | 'voted'>('idle');
@@ -103,12 +103,13 @@ const App: React.FC = () => {
     }, 2000);
   };
 
+  // ✨ Hàm xử lý Mint
   const handleMint = async () => {
     if (!user) return;
     setMinting(true);
     try {
       await submitMintNftTransaction();
-      // Mint success logic here
+      // Mint success logic (optional: toast notification)
     } catch (e) {
       console.error(e);
     } finally {
@@ -118,9 +119,7 @@ const App: React.FC = () => {
 
   if (!mounted) return null;
 
-  // 👇👇👇 SỬA LỖI TẠI ĐÂY 👇👇👇
-  // Logic cũ (SAI): So sánh block-index với ngày dương lịch -> Luôn false
-  // Logic mới (ĐÚNG): So sánh ngày của lastCheckInAt với ngày hiện tại
+  // ✨ LOGIC KIỂM TRA: Đã check-in hôm nay chưa?
   const isCheckedInToday = user && user.lastCheckInAt && 
     new Date(user.lastCheckInAt).toDateString() === new Date().toDateString();
 
@@ -323,7 +322,7 @@ const App: React.FC = () => {
             {/* Stats Grid */}
             <StreakCard user={user} />
              
-            {/* ✨ NFT MINT SECTION (Fix logic hiển thị) ✨ */}
+            {/* ✨ NFT MINT SECTION (Đoạn này file cũ của bạn đang thiếu) ✨ */}
             {user && (
               <div className="mt-8 bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 rounded-3xl p-6 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl"></div>
@@ -343,7 +342,7 @@ const App: React.FC = () => {
                       Mint your exclusive NFT. Only available if you have checked in today.
                     </p>
                     
-                    {/* Logic nút bấm đã sửa */}
+                    {/* Logic nút bấm */}
                     {isCheckedInToday ? (
                       <button 
                         onClick={handleMint}
