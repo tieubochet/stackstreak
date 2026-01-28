@@ -14,15 +14,10 @@ import {
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
 
-/* =========================
-   NETWORK & CONFIG
-========================= */
-
 export const network = new StacksMainnet();
-
 const appConfig = new AppConfig(['store_write', 'publish_data']);
-
 export const userSession = new UserSession({ appConfig });
+
 
 export const STACKS_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
@@ -36,9 +31,11 @@ export const NFT_CONFIG = {
   network,
 };
 
-/* =========================
-   HELPERS
-========================= */
+export const STAKE_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
+  contractName: 'stake', 
+  network,
+};
 
 const DAY_MS = 86_400_000;
 
@@ -51,18 +48,18 @@ const cvToNumber = (cv: any): number => {
 };
 
 const getStoredUserData = (address: string): UserData => {
-  const defaultData: UserData = {
-    address,
-    currentStreak: 0,
-    bestStreak: 0,
-    lastCheckInDay: 0,
-    lastCheckInAt: 0,
-    points: 0,
-    streakDays: [],
-    lastMintDay: 0, // Default value
-  };
-
-  if (typeof window === 'undefined') return defaultData;
+  if (typeof window === 'undefined') {
+    return {
+      address,
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCheckInDay: 0,
+      lastCheckInAt: 0,
+      points: 0,
+      streakDays: [],
+      lastMintDay: 0,
+    };
+  }
 
   const key = `stacks_streak_${address}`;
   const stored = localStorage.getItem(key);
@@ -70,20 +67,28 @@ const getStoredUserData = (address: string): UserData => {
   if (stored) {
     const parsed = JSON.parse(stored) as Partial<UserData>;
     return {
-      ...defaultData,
-      ...parsed, // Merge stored data
-      // Đảm bảo các mảng/số không bị undefined
+      address,
+      currentStreak: parsed.currentStreak ?? 0,
+      bestStreak: parsed.bestStreak ?? 0,
+      lastCheckInDay: parsed.lastCheckInDay ?? 0,
+      lastCheckInAt: parsed.lastCheckInAt ?? 0,
+      points: parsed.points ?? 0,
       streakDays: parsed.streakDays ?? [],
-      lastMintDay: parsed.lastMintDay ?? 0, 
+      lastMintDay: parsed.lastMintDay ?? 0,
     };
   }
 
-  return defaultData;
+  return {
+    address,
+    currentStreak: 0,
+    bestStreak: 0,
+    lastCheckInDay: 0,
+    lastCheckInAt: 0,
+    points: 0,
+    streakDays: [],
+    lastMintDay: 0,
+  };
 };
-
-/* =========================
-   READ ONLY – ON CHAIN
-========================= */
 
 export const fetchUserStreak = async (
   address: string
@@ -99,9 +104,7 @@ export const fetchUserStreak = async (
     });
 
     if (res.type !== ClarityType.Tuple) return null;
-
     const data = res.data;
-
     return {
       currentStreak: cvToNumber(data['streak']),
       bestStreak: cvToNumber(data['best-streak']),
@@ -112,10 +115,6 @@ export const fetchUserStreak = async (
     return null;
   }
 };
-
-/* =========================
-   USER DATA MERGE
-========================= */
 
 export const getRealUserData = async (): Promise<UserData | null> => {
   if (!userSession.isUserSignedIn()) return null;
@@ -132,8 +131,7 @@ export const getRealUserData = async (): Promise<UserData | null> => {
     currentStreak: Math.max(local.currentStreak, chain?.currentStreak ?? 0),
     bestStreak: Math.max(local.bestStreak, chain?.bestStreak ?? 0),
     lastCheckInDay: Math.max(local.lastCheckInDay, chain?.lastCheckInDay ?? 0),
-    // lastMintDay chỉ lấy từ local vì contract chưa có hàm read-only cho nó
-    lastMintDay: local.lastMintDay, 
+    lastMintDay: local.lastMintDay,
   };
 
   if (merged.currentStreak > 0 && merged.streakDays.length === 0) {
@@ -148,10 +146,6 @@ export const getRealUserData = async (): Promise<UserData | null> => {
 
   return merged;
 };
-
-/* =========================
-   AUTH
-========================= */
 
 export const authenticate = (): Promise<UserData> => {
   return new Promise((resolve, reject) => {
@@ -175,10 +169,6 @@ export const logout = () => {
   userSession.signUserOut();
 };
 
-/* =========================
-   TRANSACTIONS
-========================= */
-
 export const submitCheckInTransaction = (
   current: UserData
 ): Promise<{ newData: UserData; reward: number }> => {
@@ -196,10 +186,8 @@ export const submitCheckInTransaction = (
       onFinish: () => {
         const now = Date.now();
         const todayDayIndex = Math.floor(now / DAY_MS);
-
         const newStreak = current.currentStreak + 1;
         const reward = 10 + newStreak * 2;
-
         const newData: UserData = {
           ...current,
           currentStreak: newStreak,
@@ -209,11 +197,9 @@ export const submitCheckInTransaction = (
           points: current.points + reward,
           streakDays: Array.from(new Set([...(current.streakDays || []), todayDayIndex])),
         };
-
         if (typeof window !== 'undefined') {
           localStorage.setItem(`stacks_streak_${current.address}`, JSON.stringify(newData));
         }
-
         resolve({ newData, reward });
       },
       onCancel: () => reject('Transaction cancelled'),
@@ -221,9 +207,7 @@ export const submitCheckInTransaction = (
   });
 };
 
-export const submitVoteTransaction = (
-  vote: boolean
-): Promise<string> => {
+export const submitVoteTransaction = (vote: boolean): Promise<string> => {
   return new Promise((resolve, reject) => {
     openContractCall({
       network,
@@ -241,7 +225,6 @@ export const submitVoteTransaction = (
   });
 };
 
-// ✨ UPDATE: Thêm tham số user để lưu trạng thái
 export const submitMintNftTransaction = (user: UserData): Promise<string> => {
   return new Promise((resolve, reject) => {
     openContractCall({
@@ -255,17 +238,33 @@ export const submitMintNftTransaction = (user: UserData): Promise<string> => {
         icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
       onFinish: (data) => {
-        // 🔥 Lưu trạng thái đã mint vào localStorage ngay lập tức
         const todayDayIndex = Math.floor(Date.now() / DAY_MS);
         const newData = { ...user, lastMintDay: todayDayIndex };
-        
         if (typeof window !== 'undefined') {
           localStorage.setItem(`stacks_streak_${user.address}`, JSON.stringify(newData));
         }
-        
         resolve(data.txId);
       },
       onCancel: () => reject('Mint cancelled'),
+    });
+  });
+};
+
+
+export const submitStakeTransaction = (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    openContractCall({
+      network: STAKE_CONFIG.network,
+      contractAddress: STAKE_CONFIG.contractAddress,
+      contractName: STAKE_CONFIG.contractName, 
+      functionName: 'stake-stx',
+      functionArgs: [], 
+      appDetails: {
+        name: 'StacksStreak Staking',
+        icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
+      },
+      onFinish: (data) => resolve(data.txId),
+      onCancel: () => reject('Staking cancelled'),
     });
   });
 };
