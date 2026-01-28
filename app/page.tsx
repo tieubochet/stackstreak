@@ -7,11 +7,11 @@ import {
   logout, 
   submitCheckInTransaction, 
   submitVoteTransaction,
-  submitMintNftTransaction, // ✨ Đã import
+  submitMintNftTransaction, 
   formatAddress, 
   getRealUserData, 
   userSession 
-} from '../services/stacks'; // 👈 Chú ý: import từ ../services
+} from '../services/stacks';
 import { UserData, AppState } from '../types';
 import Spinner from '../components/Spinner';
 import StreakCard from '../components/StreakCard';
@@ -23,7 +23,7 @@ export default function Home() {
   const [user, setUser] = useState<UserData | null>(null);
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [loading, setLoading] = useState(false);
-  const [minting, setMinting] = useState(false); // ✨ State cho nút Mint
+  const [minting, setMinting] = useState(false);
   const [reward, setReward] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [votingStatus, setVotingStatus] = useState<'idle' | 'voting' | 'voted'>('idle');
@@ -105,13 +105,11 @@ export default function Home() {
     }, 2000);
   };
 
-  // ✨ Hàm xử lý Mint
   const handleMint = async () => {
     if (!user) return;
     setMinting(true);
     try {
       await submitMintNftTransaction();
-      // Logic sau khi mint thành công (nếu cần)
     } catch (e) {
       console.error(e);
     } finally {
@@ -121,10 +119,11 @@ export default function Home() {
 
   if (!mounted) return null;
 
-  // ✨ LOGIC KIỂM TRA: So sánh ngày check-in với ngày hiện tại (Local Time)
+  // --- LOGIC PHẢI ĐẶT Ở ĐÂY (TRƯỚC 'return') ---
   const isCheckedInToday = user && user.lastCheckInAt && 
     new Date(user.lastCheckInAt).toDateString() === new Date().toDateString();
 
+  // --- BẮT ĐẦU PHẦN GIAO DIỆN ---
   return (
     <div className="min-h-screen bg-slate-900 text-white selection:bg-orange-500 selection:text-white">
       {/* Navigation */}
@@ -324,27 +323,24 @@ export default function Home() {
             {/* Stats Grid */}
             <StreakCard user={user} />
              
-            {/* ✨ NFT MINT SECTION (Đã thêm vào file page.tsx) ✨ */}
+            {/* NFT MINT SECTION */}
             {user && (
               <div className="mt-8 bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 rounded-3xl p-6 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl"></div>
                 
                 <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                  {/* NFT Image */}
                   <div className="relative group shrink-0">
                     <div className="absolute inset-0 bg-cyan-400 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                     <img src="/assets/dolphin.jpg" alt="Dolphin NFT" className="w-40 h-40 rounded-2xl shadow-2xl relative border-2 border-cyan-500/50 object-cover transform group-hover:scale-105 transition-transform duration-300" />
                     <div className="absolute top-2 right-2 bg-black/70 text-[10px] text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30 font-mono">SIP-009</div>
                   </div>
                   
-                  {/* Content & Logic Button */}
                   <div className="flex-1 text-center md:text-left">
                     <h3 className="text-2xl font-bold text-white mb-2">Daily Dolphin Collectible</h3>
                     <p className="text-slate-300 text-sm mb-6">
                       Mint your exclusive NFT. Only available if you have checked in today.
                     </p>
                     
-                    {/* Logic nút bấm */}
                     {isCheckedInToday ? (
                       <button 
                         onClick={handleMint}
@@ -384,3 +380,33 @@ export default function Home() {
                 <StreakHeatmap
                   streakDays={user.streakDays.length > 0 ? user.streakDays : Array.from({length: user.currentStreak}, (_, i) => Math.floor(Date.now()/86400000) - i)}
                   days={30}
+                />
+              </div>
+            )}
+
+          </div>
+
+          {/* Right Column: Leaderboard */}
+          <div className="lg:col-span-1">
+             <Leaderboard />
+             
+             <div className="mt-8 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+               <div className="flex items-start space-x-3">
+                 <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                 <div>
+                   <h4 className="font-bold text-sm text-slate-300 mb-1">How it works</h4>
+                   <p className="text-xs text-slate-500 leading-relaxed">
+                     1. Check in once every 24 hours.<br/>
+                     2. Missing a day resets your streak to 0.<br/>
+                     3. Higher streaks = better rewards multipliers.<br/>
+                     4. Top 10 users earn weekly STX prizes.
+                   </p>
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
