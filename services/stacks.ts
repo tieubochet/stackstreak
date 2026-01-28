@@ -24,14 +24,13 @@ const appConfig = new AppConfig(['store_write', 'publish_data']);
 
 export const userSession = new UserSession({ appConfig });
 
-// Contract Điểm Danh (Cũ)
 export const STACKS_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'streak-reg',
   network,
 };
 
-// ✨ NEW: Cấu hình Contract NFT (teeboo-nft)
+// Config NFT Contract
 export const NFT_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'teeboo-nft', 
@@ -125,7 +124,7 @@ export const fetchUserStreak = async (
 };
 
 /* =========================
-   USER DATA MERGE
+   USER DATA MERGE (SỬA LỖI TẠI ĐÂY)
 ========================= */
 
 export const getRealUserData = async (): Promise<UserData | null> => {
@@ -137,13 +136,22 @@ export const getRealUserData = async (): Promise<UserData | null> => {
   const local = getStoredUserData(address);
   const chain = await fetchUserStreak(address);
 
+  // 👇 LOGIC FIX: Luôn lấy giá trị lớn nhất giữa Local và Chain
+  // Điều này giúp giữ trạng thái "Đã check-in" ngay cả khi Chain chưa cập nhật kịp.
   const merged: UserData = {
     ...local,
-    ...chain,
+    ...chain, 
+    currentStreak: Math.max(local.currentStreak, chain?.currentStreak ?? 0),
     bestStreak: Math.max(local.bestStreak, chain?.bestStreak ?? 0),
+    lastCheckInDay: Math.max(local.lastCheckInDay, chain?.lastCheckInDay ?? 0),
+    
+    // Giữ nguyên các trường local-only
+    lastCheckInAt: local.lastCheckInAt,
+    points: Math.max(local.points, chain?.points ?? 0), // (Lưu ý: chain ko trả về points nên dòng này chủ yếu lấy local)
+    streakDays: local.streakDays
   };
 
-  // Tự động điền streakDays để hiện Heatmap nếu cần
+  // Tự động điền streakDays nếu bị rỗng (Fix Heatmap)
   if (merged.currentStreak > 0 && merged.streakDays.length === 0) {
     const today = Math.floor(Date.now() / 86400000);
     merged.streakDays = Array.from({ length: merged.currentStreak }, (_, i) => today - i);
@@ -249,7 +257,6 @@ export const submitVoteTransaction = (
   });
 };
 
-// ✨ NEW: Hàm Mint NFT mà file cũ của bạn đang thiếu
 export const submitMintNftTransaction = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     openContractCall({
