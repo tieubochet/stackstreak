@@ -36,77 +36,77 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 ## Getting Started
 
 1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/tieubochet/stacks-streak.git
-   cd stacks-streak
+```
+  git clone https://github.com/tieubochet/stacks-streak.git
+  cd stacks-streak
 
-  ```
+```
 
 2. **Install dependencies:**
-  ```bash
-  npm install
-  # or
-  yarn install
+```
+npm install
+# or
+yarn install
 
-  ```
+```
 
 
 3. **Asset Setup:**
-  Ensure you have the NFT image placed at:
-  `public/assets/dolphin.jpg`
+Ensure you have the NFT image placed at:
+`public/assets/dolphin.jpg`
 
 
 4. **Run the development server:**
-  ```bash
-  npm run dev
+```
+npm run dev
 
-  ```
+```
 
 
 5. Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) with your browser.
 
 ## Configuration
 
-  The app is currently configured for **Stacks Mainnet**.
-  You can change the contract settings in `services/stacks.ts`.
+The app is currently configured for **Stacks Mainnet**.
+You can change the contract settings in `services/stacks.ts`.
 
 **Contract Configurations:**
 
-  ```typescript
-  export const STACKS_CONFIG = {
-    contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
-    contractName: 'streak-reg', 
-    network: new StacksMainnet(),
-  };
+```typescript
+export const STACKS_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
+  contractName: 'streak-reg', 
+  network: new StacksMainnet(),
+};
 
-  export const NFT_CONFIG = {
-    contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-    contractName: 'teeboo-nft', 
-    network: new StacksMainnet(),
-  };
+export const NFT_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'teeboo-nft', 
+  network: new StacksMainnet(),
+};
 
-  export const STAKE_CONFIG = {
-    contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-    contractName: 'simple-staking', 
-    network: new StacksMainnet(),
-  };
+export const STAKE_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'simple-staking', 
+  network: new StacksMainnet(),
+};
 
-  export const PREDICTION_CONFIG = {
-    contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-    contractName: 'prediction-market', 
-    network: new StacksMainnet(),
-  };
+export const PREDICTION_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'prediction-market', 
+  network: new StacksMainnet(),
+};
 
-  ```
+```
 
 ## Deployment
 
-  This project is ready to be deployed on **Vercel**:
+This project is ready to be deployed on **Vercel**:
 
-  1. Push your code to GitHub.
-  2. Import the project into Vercel.
-  3. Vercel will automatically detect Next.js and deploy.
+1. Push your code to GitHub.
+2. Import the project into Vercel.
+3. Vercel will automatically detect Next.js and deploy.
 
 ## License
 
-  MIT
+MIT
