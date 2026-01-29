@@ -5,7 +5,7 @@ import {
   LEADERBOARD_UPDATED_EVENT,
   LeaderboardEntry,
 } from '../services/leaderboard';
-import { formatAddress } from '../services/stacks';
+import { formatAddress, fetchBnsName } from '../services/stacks';
 
 const rankStyle = (index: number) => {
   switch (index) {
@@ -25,9 +25,36 @@ const rankStyle = (index: number) => {
 
 export default function Leaderboard() {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
+  // Cache để lưu tên miền đã fetch, tránh gọi API nhiều lần
+  const [bnsMap, setBnsMap] = useState<Record<string, string>>({});
 
   const refresh = () => {
-    setData(getLeaderboard());
+    const list = getLeaderboard();
+    setData(list);
+    // Gọi hàm load tên BNS mỗi khi danh sách cập nhật
+    loadBnsNames(list);
+  };
+
+  // Hàm helper để load BNS cho danh sách user
+  const loadBnsNames = async (entries: LeaderboardEntry[]) => {
+    const newMap = { ...bnsMap };
+    let hasUpdate = false;
+
+    for (const entry of entries) {
+      // Chỉ fetch nếu chưa có trong cache
+      if (!newMap[entry.address]) {
+        const name = await fetchBnsName(entry.address);
+        if (name) {
+          newMap[entry.address] = name;
+          hasUpdate = true;
+        }
+      }
+    }
+
+    // Chỉ update state nếu có thay đổi để tránh re-render thừa
+    if (hasUpdate) {
+      setBnsMap(prev => ({ ...prev, ...newMap }));
+    }
   };
 
   useEffect(() => {
@@ -58,6 +85,8 @@ export default function Leaderboard() {
 
       {data.map((u, i) => {
         const rank = rankStyle(i);
+        // Ưu tiên hiển thị tên BNS từ map, nếu không có thì dùng địa chỉ rút gọn
+        const displayName = bnsMap[u.address] || formatAddress(u.address);
 
         return (
           <div
@@ -68,7 +97,9 @@ export default function Leaderboard() {
           >
             <div className={`flex items-center gap-2 ${rank.className}`}>
               <span>{rank.icon}</span>
-              <span>{formatAddress(u.address)}</span>
+              <span className="truncate max-w-[120px]" title={u.address}>
+                {displayName}
+              </span>
             </div>
 
             <div className="font-bold text-orange-400">

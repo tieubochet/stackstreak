@@ -10,7 +10,8 @@ import {
   submitVoteTransaction,
   submitMintNftTransaction, 
   submitStakeTransaction,
-  submitPredictionTransaction, 
+  submitPredictionTransaction,
+  fetchBnsName, 
   formatAddress, 
   getRealUserData, 
   userSession 
@@ -29,6 +30,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [minting, setMinting] = useState(false);
   const [staking, setStaking] = useState(false);
+  const [bnsName, setBnsName] = useState<string | null>(null);
   
   // ✨ State cho Prediction
   const [predicting, setPredicting] = useState<'up' | 'down' | null>(null); 
@@ -51,7 +53,14 @@ export default function Home() {
       if (userSession.isUserSignedIn()) {
         const userData = await getRealUserData();
         setUser(userData);
+
+        if (userData) {
+          fetchBnsName(userData.address).then(name => {
+            if (name) setBnsName(name);
+          });
+        }
       }
+      
     };
     initSession();
     const timer = setInterval(() => setNow(Date.now()), 60000);
@@ -65,6 +74,9 @@ export default function Home() {
     try {
       const userData = await authenticate();
       setUser(userData);
+      fetchBnsName(userData.address).then(name => {
+        if (name) setBnsName(name);
+      });
     } catch (e: any) {
       console.error(e);
       setError(e.toString());
@@ -177,7 +189,7 @@ export default function Home() {
               ) : (
                 <div className="flex items-center space-x-4">
                   <div className="hidden md:block text-right">
-                    <p className="text-sm font-medium text-white">{formatAddress(user.address)}</p>
+                    <p className="text-sm font-medium text-white">{bnsName || formatAddress(user.address)}</p>
                     <p className="text-xs text-orange-400">{user.points} PTS</p>
                   </div>
                   <button onClick={handleDisconnect} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"><LogOut className="w-5 h-5" /></button>

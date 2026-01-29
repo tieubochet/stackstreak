@@ -298,5 +298,16 @@ export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
   });
 };
 
+export const fetchBnsName = async (address: string): Promise<string | null> => {
+  try {
+    const res = await fetch(`https://api.mainnet.hiro.so/v1/addresses/stacks/${address}`);
+    const data = await res.json();
+    return data.names && data.names.length > 0 ? data.names[0] : null;
+  } catch (e) {
+    console.error("Failed to fetch BNS:", e);
+    return null;
+  }
+};
+
 export const formatAddress = (addr: string) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
