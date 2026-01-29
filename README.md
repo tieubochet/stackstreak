@@ -39,7 +39,6 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 ```
   git clone https://github.com/tieubochet/stacks-streak.git
   cd stacks-streak
-
 ```
 
 2. **Install dependencies:**
@@ -47,7 +46,6 @@ Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
 npm install
 # or
 yarn install
-
 ```
 
 
@@ -59,7 +57,6 @@ Ensure you have the NFT image placed at:
 4. **Run the development server:**
 ```
 npm run dev
-
 ```
 
 
