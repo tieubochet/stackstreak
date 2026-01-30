@@ -45,7 +45,7 @@ export const NFT_CONFIG = {
 
 export const STAKE_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'simple-staking', 
+  contractName: 'stake', 
   network,
 };
 
