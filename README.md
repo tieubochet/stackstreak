@@ -1,109 +1,110 @@
-# StacksStreak
+# StacksStreak 🚀
 
-A daily on-chain engagement dApp built on the Stacks blockchain. Users can check in daily, maintain streaks, earn points, vote on community proposals, stake STX, predict market trends, and mint exclusive daily NFTs.
+A gamified on-chain engagement dApp built on the Stacks blockchain. Users can check in daily, earn **$STREAK** tokens, maintain streaks, protect their progress with Shields, customize their experience with Themes, and participate in community DeFi activities.
 
-## Features
+![StacksStreak Banner](public/assets/dolphin.jpg)
 
-- **Wallet Connection**: Support for Leather (Hiro) and Xverse wallets via `@stacks/connect`.
-- **Daily Check-in**: Smart contract interaction to record daily activity and maintain streaks.
-- **Daily NFT Minting**: Users who check in can mint a "Daily Dolphin" collectible (SIP-009 Standard).
-- **Stake to Support (NEW)**: Lock 0.1 STX to show commitment to the community.
-- **Prediction Market (NEW)**: Predict whether STX price will go UP or DOWN.
-- **Gamification**: Streak tracking, heatmaps, daily rewards wheel, leaderboard, and social sharing.
-- **Voting**: On-chain community voting mechanism.
-- **BNS Integration**: Displays Bitcoin Name System names (e.g., `user.btc`) instead of raw addresses.
-- **Responsive UI**: Built with Tailwind CSS for mobile and desktop, featuring a modern cyberpunk aesthetic.
+## ✨ Key Features
 
-## Tech Stack
+### 1. Core Gamification
+- **Daily Check-in**: Record your activity on-chain to build your streak.
+- **$STREAK Rewards (SIP-010)**: Automatically mint **$STREAK** tokens to your wallet upon every check-in.
+  - *Reward Formula:* `10 + (2 * Current Streak)` tokens per day.
+- **Daily NFT**: Mint a "Daily Dolphin" collectible (SIP-009) if you check in.
+- **Leaderboard**: Compete with others (displays **BNS names** like `user.btc`).
+- **Heatmap**: Visual tracking of your activity over the last 30 days.
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + Lucide Icons
-- **Blockchain**: Stacks.js libraries (`@stacks/network`, `@stacks/transactions`, `@stacks/profile`)
-- **Smart Contracts**: Clarity (SIP-009 for NFTs)
+### 2. Shop & Items
+- **Streak Freeze (Shields) 🛡️**: 
+  - Buy shields for **5 STX**.
+  - Automatically consumes 1 shield to save your streak if you miss a day.
+- **Theme Shop 🎨**: 
+  - Customize the dApp's look and feel.
+  - **Standard**: Free (Orange/Slate).
+  - **Matrix**: Buy for **1 STX** (Green/Black).
+  - **Cyberpunk**: Buy for **1 STX** (Pink/Purple).
 
-## Smart Contracts (Mainnet)
+### 3. Community & DeFi
+- **Prediction Market 📈**: Predict if STX price will go **UP** or **DOWN**. (Entry: 0.5 STX).
+- **Staking 🪙**: Lock **0.1 STX** to show your commitment to the community.
+- **Voting 🗳️**: On-chain community voting mechanism.
 
-This dApp interacts with four main contracts:
+## 🛠 Tech Stack
 
-1. **Streak Registry** (`streak-reg`): Handles user profiles, check-ins, and streak logic.
-2. **NFT Collection** (`teeboo-nft`): Handles the minting of the Daily Dolphin NFTs.
-3. **Staking** (`simple-staking`): Handles the 0.1 STX locking mechanism.
-4. **Prediction Market** (`prediction-market`): Handles STX price prediction logic.
+- **Frontend**: Next.js 14 (App Router), React, TypeScript.
+- **Styling**: Tailwind CSS (Dynamic Themes), Lucide React Icons.
+- **Blockchain Integration**: Stacks.js (`@stacks/connect`, `@stacks/transactions`, `@stacks/network`).
+- **Smart Contracts**: Clarity (v2).
 
-Deployed Address: `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`
+## 📜 Smart Contracts (Mainnet)
 
-## Getting Started
+The dApp interacts with a suite of contracts deployed at `SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8`:
+
+| Feature | Contract Name | Description |
+| :--- | :--- | :--- |
+| **Registry** | `streak-reg-v2` | Handles user profiles, streaks, shields, and themes. |
+| **Token** | `streak-token-v2` | The $STREAK SIP-010 fungible token. |
+| **NFT** | `teeboo-nft` | The Daily Dolphin SIP-009 NFT collection. |
+| **Staking** | `simple-staking` | Handles the 0.1 STX locking mechanism. |
+| **Prediction** | `prediction-market` | Handles STX price prediction logic. |
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- A Stacks Wallet (Leather or Xverse)
+
+### Installation
 
 1. **Clone the repository:**
-```
-  git clone https://github.com/tieubochet/stacks-streak.git
-  cd stacks-streak
+   ```bash
+   git clone https://github.com/tieubochet/stacks-streak.git
+   cd stacks-streak
+
 ```
 
 2. **Install dependencies:**
-```
+```bash
 npm install
 # or
 yarn install
+
 ```
 
 
-3. **Asset Setup:**
-Ensure you have the NFT image placed at:
-`public/assets/dolphin.jpg`
-
-
-4. **Run the development server:**
-```
+3. **Run the development server:**
+```bash
 npm run dev
+
 ```
 
 
-5. Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) with your browser.
+4. Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) with your browser.
 
-## Configuration
+## ⚙️ Configuration
 
-The app is currently configured for **Stacks Mainnet**.
-You can change the contract settings in `services/stacks.ts`.
-
-**Contract Configurations:**
+You can update contract addresses and network settings in `services/stacks.ts`:
 
 ```typescript
 export const STACKS_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
-  contractName: 'streak-reg', 
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'streak-reg-v2', // Latest registry
   network: new StacksMainnet(),
 };
 
-export const NFT_CONFIG = {
+export const TOKEN_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'teeboo-nft', 
-  network: new StacksMainnet(),
-};
-
-export const STAKE_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'simple-staking', 
-  network: new StacksMainnet(),
-};
-
-export const PREDICTION_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'prediction-market', 
+  contractName: 'streak-token-v2', // Latest token
   network: new StacksMainnet(),
 };
 
 ```
 
-## Deployment
+## 🤝 Contributing
 
-This project is ready to be deployed on **Vercel**:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Push your code to GitHub.
-2. Import the project into Vercel.
-3. Vercel will automatically detect Next.js and deploy.
+## 📄 License
 
-## License
+This project is licensed under the MIT License.
 
-MIT
