@@ -2,28 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ✨ THEME 0: DEFAULT (Orange/Slate) */
 :root {
-  --foreground-rgb: 248, 250, 252;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 15, 23, 42;
+  --background: #0f172a; /* Slate 900 */
+  --foreground: #f8fafc; /* Slate 50 */
+  --primary: #f97316;    /* Orange 500 */
+  --primary-foreground: #ffffff;
+  --card: #1e293b;       /* Slate 800 */
+  --card-foreground: #f8fafc;
+  --border: #334155;     /* Slate 700 */
+  --muted: #94a3b8;      /* Slate 400 */
+}
+
+/* ✨ THEME 1: MATRIX (Green/Black) */
+[data-theme='1'] {
+  --background: #020617; /* Black/Darker */
+  --foreground: #4ade80; /* Green 400 */
+  --primary: #22c55e;    /* Green 500 */
+  --primary-foreground: #000000;
+  --card: #052e16;       /* Dark Green */
+  --card-foreground: #4ade80;
+  --border: #15803d;     /* Green 700 */
+  --muted: #166534;      /* Green 800 */
+}
+
+/* ✨ THEME 2: CYBERPUNK (Pink/Purple) */
+[data-theme='2'] {
+  --background: #2e1065; /* Violet 950 */
+  --foreground: #e879f9; /* Fuchsia 400 */
+  --primary: #d946ef;    /* Fuchsia 500 */
+  --primary-foreground: #ffffff;
+  --card: #4c1d95;       /* Violet 900 */
+  --card-foreground: #f0abfc;
+  --border: #701a75;     /* Fuchsia 900 */
+  --muted: #a21caf;      /* Fuchsia 700 */
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  color: var(--foreground);
+  background: var(--background);
+  /* Hiệu ứng chuyển màu mượt mà */
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
 
-/* Custom scrollbar for cyberpunk feel */
+/* Custom scrollbar cho đẹp */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b; 
+  background: var(--card); 
 }
 ::-webkit-scrollbar-thumb {
-  background: #f97316; 
+  background: var(--primary); 
   border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #ea580c; 
 }
