@@ -9,11 +9,11 @@ import {
   callReadOnlyFunction,
   standardPrincipalCV,
   uintCV,
-  trueCV,     
-  falseCV,    
+  trueCV,
+  falseCV,
   ClarityType,
-  makeStandardSTXPostCondition, 
-  FungibleConditionCode,       
+  makeStandardSTXPostCondition,
+  FungibleConditionCode,
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
@@ -28,33 +28,35 @@ const appConfig = new AppConfig(['store_write', 'publish_data']);
 
 export const userSession = new UserSession({ appConfig });
 
+// Contract Điểm Danh (V2 mới nhất)
+export const STACKS_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'streak-reg-v2', 
+  network,
+};
+
+// Contract Token (V2 mới nhất)
 export const TOKEN_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', =
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'streak-token-v2',
   network,
 };
 
-export const STACKS_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'streak-reg-v2',
-  network,
-};
-
-
+// Contract NFT
 export const NFT_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'teeboo-nft', 
   network,
 };
 
-
+// Contract Stake
 export const STAKE_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'stake', 
+  contractName: 'simple-staking', 
   network,
 };
 
-
+// Contract Prediction
 export const PREDICTION_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'prediction-market', 
@@ -65,7 +67,6 @@ export const PREDICTION_CONFIG = {
    HELPERS
 ========================= */
 
-
 const DAY_MS = 86_400_000;
 
 const cvToNumber = (cv: any): number => {
@@ -74,27 +75,6 @@ const cvToNumber = (cv: any): number => {
     return Number(cv.value);
   }
   return 0;
-};
-
-export const fetchTokenBalance = async (address: string): Promise<number> => {
-  try {
-    const res = await callReadOnlyFunction({
-      network: TOKEN_CONFIG.network,
-      contractAddress: TOKEN_CONFIG.contractAddress,
-      contractName: TOKEN_CONFIG.contractName,
-      functionName: 'get-balance',
-      functionArgs: [standardPrincipalCV(address)],
-      senderAddress: address,
-    });
-    
-    if (res.type === ClarityType.ResponseOk) {
-       return Number(res.value.value); 
-    }
-    return 0;
-  } catch (e) {
-    console.warn("Error fetching token balance:", e);
-    return 0;
-  }
 };
 
 const getStoredUserData = (address: string): UserData => {
@@ -107,6 +87,8 @@ const getStoredUserData = (address: string): UserData => {
     points: 0,
     streakDays: [],
     lastMintDay: 0,
+    shields: 0,
+    tokenBalance: 0,
   };
 
   if (typeof window === 'undefined') return defaultData;
@@ -120,11 +102,46 @@ const getStoredUserData = (address: string): UserData => {
       ...defaultData,
       ...parsed,
       streakDays: parsed.streakDays ?? [],
-      lastMintDay: parsed.lastMintDay ?? 0, 
+      lastMintDay: parsed.lastMintDay ?? 0,
+      shields: parsed.shields ?? 0,
+      tokenBalance: parsed.tokenBalance ?? 0,
     };
   }
 
   return defaultData;
+};
+
+// Helper: Lấy BNS Name
+export const fetchBnsName = async (address: string): Promise<string | null> => {
+  try {
+    const res = await fetch(`https://api.mainnet.hiro.so/v1/addresses/stacks/${address}`);
+    const data = await res.json();
+    return data.names && data.names.length > 0 ? data.names[0] : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Helper: Lấy số dư Token $STREAK
+export const fetchTokenBalance = async (address: string): Promise<number> => {
+  try {
+    const res = await callReadOnlyFunction({
+      network: TOKEN_CONFIG.network,
+      contractAddress: TOKEN_CONFIG.contractAddress,
+      contractName: TOKEN_CONFIG.contractName,
+      functionName: 'get-balance',
+      functionArgs: [standardPrincipalCV(address)],
+      senderAddress: address,
+    });
+    
+    if (res.type === ClarityType.ResponseOk) {
+       return Number(res.value.value);
+    }
+    return 0;
+  } catch (e) {
+    console.warn("Error fetching token balance:", e);
+    return 0;
+  }
 };
 
 export const fetchUserStreak = async (
@@ -148,6 +165,7 @@ export const fetchUserStreak = async (
       currentStreak: cvToNumber(data['streak']),
       bestStreak: cvToNumber(data['best-streak']),
       lastCheckInDay: cvToNumber(data['last-day']),
+      shields: cvToNumber(data['shields']),
     };
   } catch (err) {
     console.warn('Read-only failed:', err);
@@ -163,7 +181,6 @@ export const getRealUserData = async (): Promise<UserData | null> => {
 
   const local = getStoredUserData(address);
   const chain = await fetchUserStreak(address);
-
   const balance = await fetchTokenBalance(address);
 
   const merged: UserData = {
@@ -305,13 +322,9 @@ export const submitMintNftTransaction = (user: UserData): Promise<string> => {
   });
 };
 
-
 export const submitStakeTransaction = (): Promise<string> => {
   return new Promise((resolve, reject) => {
-
     const address = userSession.loadUserData().profile.stxAddress.mainnet;
-
-
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
@@ -328,7 +341,6 @@ export const submitStakeTransaction = (): Promise<string> => {
         name: 'StacksStreak Staking',
         icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
-
       postConditions: [postCondition], 
       onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Staking cancelled'),
@@ -339,7 +351,6 @@ export const submitStakeTransaction = (): Promise<string> => {
 export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
   return new Promise((resolve, reject) => {
     const address = userSession.loadUserData().profile.stxAddress.mainnet;
-
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
@@ -356,7 +367,6 @@ export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
         name: 'StacksStreak Prediction',
         icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
-      
       postConditions: [postCondition], 
       onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Prediction cancelled'),
@@ -364,16 +374,31 @@ export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
   });
 };
 
+export const submitBuyShieldTransaction = (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const address = userSession.loadUserData().profile.stxAddress.mainnet;
+    const postCondition = makeStandardSTXPostCondition(
+      address,
+      FungibleConditionCode.Equal,
+      100000 
+    );
+
+    openContractCall({
+      network: STACKS_CONFIG.network,
+      contractAddress: STACKS_CONFIG.contractAddress,
+      contractName: STACKS_CONFIG.contractName,
+      functionName: 'buy-shield',
+      functionArgs: [],
+      appDetails: {
+        name: 'StacksStreak Shop',
+        icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
+      },
+      postConditions: [postCondition], 
+      onFinish: (data) => resolve(data.txId),
+      onCancel: () => reject('Buy shield cancelled'),
+    });
+  });
+};
+
 export const formatAddress = (addr: string) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
-
-
-export const fetchBnsName = async (address: string): Promise<string | null> => {
-  try {
-    const res = await fetch(`https://api.mainnet.hiro.so/v1/addresses/stacks/${address}`);
-    const data = await res.json();
-    return data.names && data.names.length > 0 ? data.names[0] : null;
-  } catch (e) {
-    return null;
-  }
-};
