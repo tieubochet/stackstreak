@@ -9,14 +9,23 @@ import {
   callReadOnlyFunction,
   standardPrincipalCV,
   uintCV,
+  trueCV,     
+  falseCV,    
   ClarityType,
+  makeStandardSTXPostCondition, 
+  FungibleConditionCode,       
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
-import { trueCV, falseCV } from '@stacks/transactions';
+
+/* =========================
+   NETWORK & CONFIG
+========================= */
 
 export const network = new StacksMainnet();
+
 const appConfig = new AppConfig(['store_write', 'publish_data']);
+
 export const userSession = new UserSession({ appConfig });
 
 
@@ -26,23 +35,31 @@ export const STACKS_CONFIG = {
   network,
 };
 
+
 export const NFT_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'teeboo-nft', 
   network,
 };
 
+
 export const STAKE_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', 
-  contractName: 'stake', 
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'simple-staking', 
   network,
 };
+
 
 export const PREDICTION_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'prediction-market', 
   network,
 };
+
+/* =========================
+   HELPERS
+========================= */
+
 
 const DAY_MS = 86_400_000;
 
@@ -55,37 +72,7 @@ const cvToNumber = (cv: any): number => {
 };
 
 const getStoredUserData = (address: string): UserData => {
-  if (typeof window === 'undefined') {
-    return {
-      address,
-      currentStreak: 0,
-      bestStreak: 0,
-      lastCheckInDay: 0,
-      lastCheckInAt: 0,
-      points: 0,
-      streakDays: [],
-      lastMintDay: 0,
-    };
-  }
-
-  const key = `stacks_streak_${address}`;
-  const stored = localStorage.getItem(key);
-
-  if (stored) {
-    const parsed = JSON.parse(stored) as Partial<UserData>;
-    return {
-      address,
-      currentStreak: parsed.currentStreak ?? 0,
-      bestStreak: parsed.bestStreak ?? 0,
-      lastCheckInDay: parsed.lastCheckInDay ?? 0,
-      lastCheckInAt: parsed.lastCheckInAt ?? 0,
-      points: parsed.points ?? 0,
-      streakDays: parsed.streakDays ?? [],
-      lastMintDay: parsed.lastMintDay ?? 0,
-    };
-  }
-
-  return {
+  const defaultData: UserData = {
     address,
     currentStreak: 0,
     bestStreak: 0,
@@ -95,6 +82,23 @@ const getStoredUserData = (address: string): UserData => {
     streakDays: [],
     lastMintDay: 0,
   };
+
+  if (typeof window === 'undefined') return defaultData;
+
+  const key = `stacks_streak_${address}`;
+  const stored = localStorage.getItem(key);
+
+  if (stored) {
+    const parsed = JSON.parse(stored) as Partial<UserData>;
+    return {
+      ...defaultData,
+      ...parsed,
+      streakDays: parsed.streakDays ?? [],
+      lastMintDay: parsed.lastMintDay ?? 0, 
+    };
+  }
+
+  return defaultData;
 };
 
 export const fetchUserStreak = async (
@@ -111,7 +115,9 @@ export const fetchUserStreak = async (
     });
 
     if (res.type !== ClarityType.Tuple) return null;
+
     const data = res.data;
+
     return {
       currentStreak: cvToNumber(data['streak']),
       bestStreak: cvToNumber(data['best-streak']),
@@ -138,7 +144,7 @@ export const getRealUserData = async (): Promise<UserData | null> => {
     currentStreak: Math.max(local.currentStreak, chain?.currentStreak ?? 0),
     bestStreak: Math.max(local.bestStreak, chain?.bestStreak ?? 0),
     lastCheckInDay: Math.max(local.lastCheckInDay, chain?.lastCheckInDay ?? 0),
-    lastMintDay: local.lastMintDay,
+    lastMintDay: local.lastMintDay, 
   };
 
   if (merged.currentStreak > 0 && merged.streakDays.length === 0) {
@@ -176,6 +182,10 @@ export const logout = () => {
   userSession.signUserOut();
 };
 
+/* =========================
+   TRANSACTIONS
+========================= */
+
 export const submitCheckInTransaction = (
   current: UserData
 ): Promise<{ newData: UserData; reward: number }> => {
@@ -193,8 +203,10 @@ export const submitCheckInTransaction = (
       onFinish: () => {
         const now = Date.now();
         const todayDayIndex = Math.floor(now / DAY_MS);
+
         const newStreak = current.currentStreak + 1;
         const reward = 10 + newStreak * 2;
+
         const newData: UserData = {
           ...current,
           currentStreak: newStreak,
@@ -204,9 +216,11 @@ export const submitCheckInTransaction = (
           points: current.points + reward,
           streakDays: Array.from(new Set([...(current.streakDays || []), todayDayIndex])),
         };
+
         if (typeof window !== 'undefined') {
           localStorage.setItem(`stacks_streak_${current.address}`, JSON.stringify(newData));
         }
+
         resolve({ newData, reward });
       },
       onCancel: () => reject('Transaction cancelled'),
@@ -214,7 +228,9 @@ export const submitCheckInTransaction = (
   });
 };
 
-export const submitVoteTransaction = (vote: boolean): Promise<string> => {
+export const submitVoteTransaction = (
+  vote: boolean
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     openContractCall({
       network,
@@ -247,9 +263,11 @@ export const submitMintNftTransaction = (user: UserData): Promise<string> => {
       onFinish: (data) => {
         const todayDayIndex = Math.floor(Date.now() / DAY_MS);
         const newData = { ...user, lastMintDay: todayDayIndex };
+        
         if (typeof window !== 'undefined') {
           localStorage.setItem(`stacks_streak_${user.address}`, JSON.stringify(newData));
         }
+        
         resolve(data.txId);
       },
       onCancel: () => reject('Mint cancelled'),
@@ -260,16 +278,28 @@ export const submitMintNftTransaction = (user: UserData): Promise<string> => {
 
 export const submitStakeTransaction = (): Promise<string> => {
   return new Promise((resolve, reject) => {
+
+    const address = userSession.loadUserData().profile.stxAddress.mainnet;
+
+
+    const postCondition = makeStandardSTXPostCondition(
+      address,
+      FungibleConditionCode.Equal,
+      100000 
+    );
+
     openContractCall({
       network: STAKE_CONFIG.network,
       contractAddress: STAKE_CONFIG.contractAddress,
-      contractName: STAKE_CONFIG.contractName, 
+      contractName: STAKE_CONFIG.contractName,
       functionName: 'stake-stx',
-      functionArgs: [], 
+      functionArgs: [],
       appDetails: {
         name: 'StacksStreak Staking',
         icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
+
+      postConditions: [postCondition], 
       onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Staking cancelled'),
     });
@@ -278,25 +308,35 @@ export const submitStakeTransaction = (): Promise<string> => {
 
 export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
   return new Promise((resolve, reject) => {
+    const address = userSession.loadUserData().profile.stxAddress.mainnet;
+
+    const postCondition = makeStandardSTXPostCondition(
+      address,
+      FungibleConditionCode.Equal,
+      100000 
+    );
+
     openContractCall({
       network: PREDICTION_CONFIG.network,
       contractAddress: PREDICTION_CONFIG.contractAddress,
       contractName: PREDICTION_CONFIG.contractName,
       functionName: 'predict',
-      functionArgs: [isUp ? trueCV() : falseCV()], 
+      functionArgs: [isUp ? trueCV() : falseCV()],
       appDetails: {
         name: 'StacksStreak Prediction',
         icon: typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : '',
       },
-      onFinish: (data) => {
-        if (typeof window !== 'undefined') {
-        }
-        resolve(data.txId);
-      },
+      
+      postConditions: [postCondition], 
+      onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Prediction cancelled'),
     });
   });
 };
+
+export const formatAddress = (addr: string) =>
+  addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
+
 
 export const fetchBnsName = async (address: string): Promise<string | null> => {
   try {
@@ -304,10 +344,6 @@ export const fetchBnsName = async (address: string): Promise<string | null> => {
     const data = await res.json();
     return data.names && data.names.length > 0 ? data.names[0] : null;
   } catch (e) {
-    console.error("Failed to fetch BNS:", e);
     return null;
   }
 };
-
-export const formatAddress = (addr: string) =>
-  addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
