@@ -28,10 +28,15 @@ const appConfig = new AppConfig(['store_write', 'publish_data']);
 
 export const userSession = new UserSession({ appConfig });
 
+export const TOKEN_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8', =
+  contractName: 'streak-token-v2',
+  network,
+};
 
 export const STACKS_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'streak-reg',
+  contractName: 'streak-reg-v2',
   network,
 };
 
@@ -69,6 +74,27 @@ const cvToNumber = (cv: any): number => {
     return Number(cv.value);
   }
   return 0;
+};
+
+export const fetchTokenBalance = async (address: string): Promise<number> => {
+  try {
+    const res = await callReadOnlyFunction({
+      network: TOKEN_CONFIG.network,
+      contractAddress: TOKEN_CONFIG.contractAddress,
+      contractName: TOKEN_CONFIG.contractName,
+      functionName: 'get-balance',
+      functionArgs: [standardPrincipalCV(address)],
+      senderAddress: address,
+    });
+    
+    if (res.type === ClarityType.ResponseOk) {
+       return Number(res.value.value); 
+    }
+    return 0;
+  } catch (e) {
+    console.warn("Error fetching token balance:", e);
+    return 0;
+  }
 };
 
 const getStoredUserData = (address: string): UserData => {
@@ -138,6 +164,8 @@ export const getRealUserData = async (): Promise<UserData | null> => {
   const local = getStoredUserData(address);
   const chain = await fetchUserStreak(address);
 
+  const balance = await fetchTokenBalance(address);
+
   const merged: UserData = {
     ...local,
     ...chain,
@@ -145,6 +173,8 @@ export const getRealUserData = async (): Promise<UserData | null> => {
     bestStreak: Math.max(local.bestStreak, chain?.bestStreak ?? 0),
     lastCheckInDay: Math.max(local.lastCheckInDay, chain?.lastCheckInDay ?? 0),
     lastMintDay: local.lastMintDay, 
+    shields: chain?.shields ?? local.shields ?? 0,
+    tokenBalance: balance,
   };
 
   if (merged.currentStreak > 0 && merged.streakDays.length === 0) {

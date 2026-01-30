@@ -7,6 +7,8 @@ export interface UserData {
   lastCheckInAt: number;
   streakDays: number[];
   lastMintDay: number; 
+  shields: number;
+  tokenBalance: number;
 }
 
 export interface LeaderboardEntry {

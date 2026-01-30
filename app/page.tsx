@@ -168,7 +168,9 @@ export default function Home() {
                 <div className="flex items-center space-x-4">
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium text-foreground">{bnsName || formatAddress(user.address)}</p>
-                    <p className="text-xs text-primary">{user.points} PTS</p>
+                    <p className="text-xs text-primary font-bold flex items-center justify-end gap-1">
+                      {user.tokenBalance} $STREAK
+                    </p>
                   </div>
                   <button onClick={handleDisconnect} className="p-2 hover:bg-card rounded-lg text-muted hover:text-foreground transition-colors"><LogOut className="w-5 h-5" /></button>
                 </div>
