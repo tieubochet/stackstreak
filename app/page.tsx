@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock, Check, Coins, TrendingUp, Activity, TrendingDown, DollarSign, Palette } from 'lucide-react';
+import { Wallet, LogOut, CheckCircle2, AlertCircle, Loader2, Clock, Check, Coins, TrendingUp, Activity, TrendingDown, DollarSign, Palette, Shield } from 'lucide-react';
 import { 
   authenticate, 
   logout, 
@@ -13,7 +13,8 @@ import {
   fetchBnsName,
   formatAddress, 
   getRealUserData, 
-  userSession 
+  userSession, 
+  submitBuyShieldTransaction
 } from '../services/stacks';
 import { UserData, AppState } from '../types';
 import Spinner from '../components/Spinner';
@@ -31,6 +32,7 @@ export default function Home() {
   const [staking, setStaking] = useState(false);
   const [predicting, setPredicting] = useState<'up' | 'down' | null>(null);
   const [hasPredicted, setHasPredicted] = useState(false);
+  const [buyingShield, setBuyingShield] = useState(false);
   
   // ✨ Theme States (Lưu trữ cục bộ)
   const [activeThemeId, setActiveThemeId] = useState<number>(0);
@@ -74,6 +76,22 @@ export default function Home() {
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleBuyShield = async () => {
+    if (!user) return;
+    setBuyingShield(true);
+    try {
+      await submitBuyShieldTransaction();
+      alert("Shield purchased! 🛡️");
+
+      const updatedUser = await getRealUserData();
+      setUser(updatedUser);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBuyingShield(false);
+    }
+  };
 
   const handleConnect = async () => {
     setLoading(true);
@@ -236,7 +254,39 @@ export default function Home() {
           {/* Right Column */}
           <div className="lg:col-span-1 space-y-8">
              <Leaderboard />
+            {user && (
+  <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden mb-8">
+     {/* Hiệu ứng nền */}
+     <div className="absolute -right-8 -top-8 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl"></div>
+     
+     <div className="flex justify-between items-start mb-4 relative z-10">
+       <div className="flex items-center gap-3">
+         <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-400/30 text-blue-300">
+           <Shield className="w-6 h-6" />
+         </div>
+         <div>
+           <h3 className="font-bold text-white text-lg">Streak Freeze</h3>
+           <p className="text-xs text-blue-200">
+             You have: <span className="font-bold text-white text-sm">{user.shields} 🛡️</span>
+           </p>
+         </div>
+       </div>
+     </div>
+     
+     <p className="text-sm text-slate-300 mb-4 leading-relaxed relative z-10">
+       Missed a day? Don't worry.<br/>
+       Auto-consumes 1 shield to <span className="text-blue-300 font-bold">save your streak</span>.
+     </p>
 
+     <button 
+       onClick={handleBuyShield}
+       disabled={buyingShield}
+       className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-900/50 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 relative z-10"
+     >
+       {buyingShield ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Buy Shield (0.1 STX)</span>}
+     </button>
+  </div>
+)}
              {/* ✨ THEME SWITCHER (Giao diện mới) */}
              <div className="bg-card rounded-2xl p-5 border border-border shadow-xl">
                <div className="flex items-center gap-2 mb-4 text-primary font-bold">
