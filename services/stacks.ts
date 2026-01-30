@@ -52,7 +52,7 @@ export const NFT_CONFIG = {
 // Contract Stake
 export const STAKE_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'simple-staking', 
+  contractName: 'stake', 
   network,
 };
 
@@ -69,6 +69,7 @@ export const PREDICTION_CONFIG = {
 
 const DAY_MS = 86_400_000;
 
+// Helper chuyển đổi Clarity Value sang Number an toàn
 const cvToNumber = (cv: any): number => {
   if (!cv) return 0;
   if (cv.type === ClarityType.UInt || cv.type === ClarityType.Int) {
@@ -134,8 +135,9 @@ export const fetchTokenBalance = async (address: string): Promise<number> => {
       senderAddress: address,
     });
     
+    // ✨ FIX LỖI TYPE: Dùng cvToNumber thay vì truy cập trực tiếp .value.value
     if (res.type === ClarityType.ResponseOk) {
-       return Number(res.value.value);
+       return cvToNumber(res.value);
     }
     return 0;
   } catch (e) {
@@ -328,7 +330,7 @@ export const submitStakeTransaction = (): Promise<string> => {
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
-      100000 
+      100000 // 0.1 STX
     );
 
     openContractCall({
