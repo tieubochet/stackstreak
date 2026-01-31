@@ -56,7 +56,7 @@ export const NFT_CONFIG = {
 // Contract Stake
 export const STAKE_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'simple-staking', 
+  contractName: 'stake', 
   network,
 };
 
@@ -377,7 +377,7 @@ export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
-      500000 // 0.5 STX
+      100000 
     );
 
     openContractCall({
@@ -403,7 +403,7 @@ export const submitBuyShieldTransaction = (): Promise<string> => {
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
-      5000000 // 5 STX
+      100000 
     );
 
     openContractCall({
