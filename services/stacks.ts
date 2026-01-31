@@ -1,20 +1,22 @@
+// services/stacks.ts
+
 import {
   AppConfig,
   UserSession,
   showConnect,
   openContractCall,
 } from '@stacks/connect';
-import { StacksMainnet } from '@stacks/network';
+import { StacksMainnet, StacksTestnet } from '@stacks/network';
 import {
   callReadOnlyFunction,
   standardPrincipalCV,
   uintCV,
   trueCV,
   falseCV,
+  listCV, // ✨ Cần thiết cho NFT Evolution
   ClarityType,
   makeStandardSTXPostCondition,
   FungibleConditionCode,
-  uintCV,
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
@@ -23,37 +25,38 @@ import { saveToLeaderboard } from './leaderboard';
    NETWORK & CONFIG
 ========================= */
 
+// Đổi thành StacksTestnet() nếu bạn đang chạy thử nghiệm
 export const network = new StacksMainnet();
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 
 export const userSession = new UserSession({ appConfig });
 
-// Contract Điểm Danh (V2 mới nhất)
+// Contract Điểm Danh
 export const STACKS_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'streak-reg-v2', 
   network,
 };
 
-// Contract Token (V2 mới nhất)
+// Contract Token
 export const TOKEN_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'streak-token-v2',
   network,
 };
 
-// Contract NFT
+// Contract NFT (Đã trỏ vào V2 có tính năng Evolve)
 export const NFT_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'teeboo-nft', 
+  contractName: 'teeboo-nft-v2', // ✨ Đảm bảo tên contract đúng
   network,
 };
 
 // Contract Stake
 export const STAKE_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'stake', 
+  contractName: 'simple-staking', 
   network,
 };
 
@@ -61,12 +64,6 @@ export const STAKE_CONFIG = {
 export const PREDICTION_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'prediction-market', 
-  network,
-};
-
-export const NFT_CONFIG = {
-  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
-  contractName: 'teeboo-nft-v2', 
   network,
 };
 
@@ -142,7 +139,6 @@ export const fetchTokenBalance = async (address: string): Promise<number> => {
       senderAddress: address,
     });
     
-    // ✨ FIX LỖI TYPE: Dùng cvToNumber thay vì truy cập trực tiếp .value.value
     if (res.type === ClarityType.ResponseOk) {
        return cvToNumber(res.value);
     }
@@ -150,6 +146,25 @@ export const fetchTokenBalance = async (address: string): Promise<number> => {
   } catch (e) {
     console.warn("Error fetching token balance:", e);
     return 0;
+  }
+};
+
+// Helper: Lấy danh sách NFT (Cho tính năng Evolution)
+export const fetchUserNftIds = async (address: string): Promise<number[]> => {
+  try {
+    const contractId = `${NFT_CONFIG.contractAddress}.${NFT_CONFIG.contractName}`;
+    const url = `https://api.mainnet.hiro.so/extended/v1/tokens/nft/holdings?principal=${address}&asset_identifiers=${contractId}::teeboo-nft`;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    return data.results.map((item: any) => {
+       // Giá trị thường là "u1" -> cần xóa chữ 'u' và parse int
+       return parseInt(item.value.repr.replace('u', ''));
+    });
+  } catch (e) {
+    console.error("Fetch NFTs failed:", e);
+    return [];
   }
 };
 
@@ -167,7 +182,6 @@ export const fetchUserStreak = async (
     });
 
     if (res.type !== ClarityType.Tuple) return null;
-
     const data = res.data;
 
     return {
@@ -363,7 +377,7 @@ export const submitPredictionTransaction = (isUp: boolean): Promise<string> => {
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
-      100000 
+      500000 // 0.5 STX
     );
 
     openContractCall({
@@ -389,7 +403,7 @@ export const submitBuyShieldTransaction = (): Promise<string> => {
     const postCondition = makeStandardSTXPostCondition(
       address,
       FungibleConditionCode.Equal,
-      100000 
+      5000000 // 5 STX
     );
 
     openContractCall({
@@ -409,39 +423,23 @@ export const submitBuyShieldTransaction = (): Promise<string> => {
   });
 };
 
-export const formatAddress = (addr: string) =>
-  addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
-
-export const fetchUserNftIds = async (address: string): Promise<number[]> => {
-  try {
-    const contractId = `${NFT_CONFIG.contractAddress}.${NFT_CONFIG.contractName}`;
-    const url = `https://api.mainnet.hiro.so/extended/v1/tokens/nft/holdings?principal=${address}&asset_identifiers=${contractId}::teeboo-nft`;
-    
-    const res = await fetch(url);
-    const data = await res.json();
-    
-    return data.results.map((item: any) => {
-       return parseInt(item.value.repr.replace('u', ''));
-    });
-  } catch (e) {
-    console.error("Fetch NFTs failed:", e);
-    return [];
-  }
-};
 
 export const submitEvolveTransaction = (ids: number[]): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const args = ids.map(id => uintCV(id));
+    const listArgs = ids.map(id => uintCV(id));
 
     openContractCall({
       network: NFT_CONFIG.network,
       contractAddress: NFT_CONFIG.contractAddress,
       contractName: NFT_CONFIG.contractName,
       functionName: 'evolve',
-      functionArgs: args, 
+      functionArgs: listArgs, 
       appDetails: { name: 'StacksStreak Evolution', icon: '' },
       onFinish: (data) => resolve(data.txId),
       onCancel: () => reject('Evolution cancelled'),
     });
   });
 };
+
+export const formatAddress = (addr: string) =>
+  addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
