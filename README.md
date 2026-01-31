@@ -66,10 +66,9 @@ This dApp interacts with a suite of contracts on the Stacks Mainnet (deployed at
 ### Installation
 
 1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/tieubochet/stacks-streak.git
-   cd stacks-streak
-
+```bash
+git clone https://github.com/tieubochet/stacks-streak.git
+cd stacks-streak
 ```
 
 2. **Install dependencies:**
@@ -77,14 +76,12 @@ This dApp interacts with a suite of contracts on the Stacks Mainnet (deployed at
 npm install
 # or
 yarn install
-
 ```
 
 
 3. **Run the development server:**
 ```bash
 npm run dev
-
 ```
 
 
