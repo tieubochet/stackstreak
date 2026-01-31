@@ -14,6 +14,7 @@ import {
   ClarityType,
   makeStandardSTXPostCondition,
   FungibleConditionCode,
+  uintCV,
 } from '@stacks/transactions';
 import { UserData } from '../types';
 import { saveToLeaderboard } from './leaderboard';
@@ -60,6 +61,12 @@ export const STAKE_CONFIG = {
 export const PREDICTION_CONFIG = {
   contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
   contractName: 'prediction-market', 
+  network,
+};
+
+export const NFT_CONFIG = {
+  contractAddress: 'SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8',
+  contractName: 'teeboo-nft-v2', 
   network,
 };
 
@@ -404,3 +411,37 @@ export const submitBuyShieldTransaction = (): Promise<string> => {
 
 export const formatAddress = (addr: string) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
+
+export const fetchUserNftIds = async (address: string): Promise<number[]> => {
+  try {
+    const contractId = `${NFT_CONFIG.contractAddress}.${NFT_CONFIG.contractName}`;
+    const url = `https://api.mainnet.hiro.so/extended/v1/tokens/nft/holdings?principal=${address}&asset_identifiers=${contractId}::teeboo-nft`;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    return data.results.map((item: any) => {
+       return parseInt(item.value.repr.replace('u', ''));
+    });
+  } catch (e) {
+    console.error("Fetch NFTs failed:", e);
+    return [];
+  }
+};
+
+export const submitEvolveTransaction = (ids: number[]): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const args = ids.map(id => uintCV(id));
+
+    openContractCall({
+      network: NFT_CONFIG.network,
+      contractAddress: NFT_CONFIG.contractAddress,
+      contractName: NFT_CONFIG.contractName,
+      functionName: 'evolve',
+      functionArgs: args, 
+      appDetails: { name: 'StacksStreak Evolution', icon: '' },
+      onFinish: (data) => resolve(data.txId),
+      onCancel: () => reject('Evolution cancelled'),
+    });
+  });
+};
