@@ -20,7 +20,7 @@ import {
   getRealUserData, 
   userSession,
   fetchUserNftIds,         
-  submitEvolveTransaction 
+  submitEvolveTransaction  
 } from '../services/stacks';
 import { UserData, AppState } from '../types';
 import Spinner from '../components/Spinner';
@@ -50,18 +50,18 @@ export default function Home() {
   // --- THEME STATE ---
   const [activeThemeId, setActiveThemeId] = useState<number>(0);
 
-  // --- ✨ NFT EVOLUTION STATE ---
+  // --- NFT EVOLUTION STATE ---
   const [userNfts, setUserNfts] = useState<number[]>([]);
   const [selectedNfts, setSelectedNfts] = useState<number[]>([]);
   const [evolving, setEvolving] = useState(false);
 
-  // 1. Load Theme từ LocalStorage
+  // 1. Load Theme
   useEffect(() => {
     const savedTheme = localStorage.getItem('stacks_streak_theme');
     if (savedTheme) setActiveThemeId(Number(savedTheme));
   }, []);
 
-  // 2. Apply Theme vào Body
+  // 2. Apply Theme
   useEffect(() => {
     document.body.setAttribute('data-theme', activeThemeId.toString());
   }, [activeThemeId]);
@@ -80,7 +80,6 @@ export default function Home() {
         setUser(userData);
         if (userData) {
           fetchBnsName(userData.address).then(name => name && setBnsName(name));
-          // ✨ Load danh sách NFT của user
           fetchUserNftIds(userData.address).then(ids => setUserNfts(ids));
         }
       }
@@ -113,7 +112,7 @@ export default function Home() {
     setUser(null);
     setAppState(AppState.IDLE);
     setVotingStatus('idle');
-    setUserNfts([]); // Clear NFT
+    setUserNfts([]); 
   };
 
   const handleCheckIn = async () => {
@@ -147,7 +146,6 @@ export default function Home() {
       await submitMintNftTransaction(user); 
       const u = await getRealUserData(); 
       setUser(u);
-      // Reload NFT list
       if(u) fetchUserNftIds(u.address).then(ids => setUserNfts(ids));
     } catch (e) { } finally { setMinting(false); } 
   };
@@ -156,7 +154,7 @@ export default function Home() {
   
   const handlePredict = async (dir: 'up' | 'down') => { if (!user) return; setPredicting(dir); try { await submitPredictionTransaction(dir === 'up'); } catch (e) { } finally { setPredicting(null); } };
 
-  // --- ✨ NEW HANDLERS: SHIELD & EVOLUTION ---
+  // --- HANDLERS: SHIELD & EVOLUTION ---
 
   const handleBuyShield = async () => {
     if (!user) return;
@@ -189,14 +187,12 @@ export default function Home() {
       await submitEvolveTransaction(selectedNfts);
       alert("Fusion started! 🦈 Check wallet for your Shark.");
       setSelectedNfts([]);
-      // Reload NFT list sau vài giây
       setTimeout(() => {
         if(user) fetchUserNftIds(user.address).then(ids => setUserNfts(ids));
       }, 5000);
     } catch (e) { console.error(e); } finally { setEvolving(false); }
   };
 
-  // --- THEME DATA ---
   const themes = [
     { id: 0, name: 'Standard', color: 'bg-orange-500' },
     { id: 1, name: 'Matrix', color: 'bg-green-500' },
@@ -302,7 +298,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* ✨ FUSION CHAMBER (MỚI) */}
+            {/* FUSION CHAMBER */}
             {user && userNfts.length > 0 && (
               <div className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-indigo-500/30 rounded-3xl p-6 relative overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-8">
                  <div className="flex items-center gap-3 mb-4">
@@ -311,7 +307,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white">Fusion Chamber</h3>
-                      <p className="text-xs text-indigo-200">Merge 5 Dolphins -> 1 Shark</p>
+                      <p className="text-xs text-indigo-200">Merge 5 Dolphins -&gt; 1 Shark</p> 
                     </div>
                  </div>
 
