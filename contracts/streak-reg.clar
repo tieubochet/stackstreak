@@ -7,6 +7,13 @@
 (define-constant ERR_NOT_OWNER u104)
 (define-constant ERR_TRANSFER_DISABLED u105)
 
+(define-event check-in-event
+  (user principal)
+  (day uint)
+  (streak uint)
+  (best-streak uint)
+)
+
 (define-map user-state
   principal
   {
@@ -110,7 +117,7 @@
             })
             
             (mint-or-upgrade-sbt tx-sender new-streak)
-            
+             (emit-event check-in-event tx-sender today new-streak best)
             (ok {
               action: "check-in",
               day: today,
